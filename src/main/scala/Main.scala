@@ -36,11 +36,23 @@ object Main extends App {
   println(" [*] Listening on 0.0.0.0:15674")
   //server.listen( 15674, "0.0.0.0" )
 
+  def buildMessage( command: String, headers: List[(String, String)], body: String ) = {
+    val escaped = headers map {case (k, v) => s"${escape(k)}:${escape( v )}"} mkString "\n"
+
+    s"$command\n$escaped\n\n$body\u0000"
+  }
+
+  private def escape( s: String ) = s.
+    replace( "\\", "\\\\" ).
+    replace( "\r", "\\r" ).
+    replace( "\n", "\\n" ).
+    replace( ":", "\\c" )
+
 }
 
 object parseMessage extends {
 
-  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00""", "s" )
+  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
   private val HeaderRegex = """([a-z0-9\]+):(.+)"""r
 
   def apply( message: String ) = {
