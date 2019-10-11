@@ -18,7 +18,10 @@ object Main extends App {
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
     println("connection")
     conn.on( "data", (message: String) => {
-      println(message)
+      parseMessage( message ) match {
+        case ("CONNECT", headers, _) =>
+          println( s"connecting ${headers("login")}" )
+      }
     } )
   } )
 
@@ -35,20 +38,26 @@ object Main extends App {
 
   sockjs_echo.installHandlers( server, js.Dynamic.literal(prefix = "/ws").asInstanceOf[ServerOptions] )
   println(" [*] Listening on 0.0.0.0:15674")
-  server.listen( 15674, "0.0.0.0" )
+  //server.listen( 15674, "0.0.0.0" )
 
 }
 
-object parseMessage {
+object parseMessage extends {
 
   private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00""", "s" )
-  private val HeaderRegex = "([a-z0-9]+):(.+)"r
+  private val HeaderRegex = """([a-z0-9\]+):(.+)"""r
 
   def apply( message: String ) = {
     val List(_, command, headers, body ) = stompMessageRegex.exec( message ).toList
-    val headerMap = HeaderRegex.findAllMatchIn(headers.toString) map (m => m.group(1) -> m.group(2)) toMap
+    val headerMap = HeaderRegex findAllMatchIn headers.toString map (m => unescape( m.group(1) ) -> unescape( m.group(2) )) toMap
 
     (command.toString, headerMap, body.toString)
   }
+
+  private def unescape( s: String ) = s.
+    replace( "\\r", "\r" ).
+    replace( "\\n", "\n" ).
+    replace( "\\c", ":" ).
+    replace( "\\\\", "\\" )
 
 }
