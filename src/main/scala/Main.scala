@@ -27,10 +27,6 @@ object Main extends App {
 
   val server = httpMod.createServer()
 
-//  server.addListener("request", (req: ClientRequest, res: ServerResponse) => {
-//    println( "static" )
-//  } )
-
   server.addListener("upgrade", (reqres: js.Any) => {
     println( "upgrade" )
     reqres.asInstanceOf[Array[js.Any]](0).asInstanceOf[ClientRequest].end()
