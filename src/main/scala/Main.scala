@@ -8,6 +8,7 @@ import typings.sockjs.sockjsMod.ServerOptions
 import typings.sockjs.sockjsStrings
 
 import scala.scalajs.js
+import scala.scalajs.js.RegExp
 
 
 object Main extends App {
@@ -17,7 +18,6 @@ object Main extends App {
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
     println("connection")
     conn.on( "data", (message: String) => {
-      conn.write( message )
       println(message)
     } )
   } )
@@ -36,5 +36,19 @@ object Main extends App {
   sockjs_echo.installHandlers( server, js.Dynamic.literal(prefix = "/ws").asInstanceOf[ServerOptions] )
   println(" [*] Listening on 0.0.0.0:15674")
   server.listen( 15674, "0.0.0.0" )
+
+}
+
+object parseMessage {
+
+  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00""", "s" )
+  private val HeaderRegex = "([a-z0-9]+):(.+)"r
+
+  def apply( message: String ) = {
+    val List(_, command, headers, body ) = stompMessageRegex.exec( message ).toList
+    val headerMap = HeaderRegex.findAllMatchIn(headers.toString) map (m => m.group(1) -> m.group(2)) toMap
+
+    (command.toString, headerMap, body.toString)
+  }
 
 }
