@@ -24,43 +24,55 @@ object Main extends App {
 
 class StompServer( name: String, authorize: String => Boolean, debug: Boolean = false ) {
 
-  case class SubscriptionKey( removeAddress: String, remotePort: Double, id: String )
+  case class SubscriptionKey( conn: ConnectionKey, id: String )
   case class Subscription( destination: String, ack: String )
+
+  case class ConnectionKey( removeAddress: String, remotePort: Double )
 
   private val sockjs_echo = sockjs.sockjsMod.createServer()
   private val subscriptions = new mutable.HashMap[SubscriptionKey, Subscription]
+  private val connections = new mutable.HashMap[ConnectionKey, Int]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
+    val connectionKey = ConnectionKey( conn.remoteAddress, conn.remotePort )
+
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
     conn.on( "data", (message: String) => {
-      parseMessage( message ) match {
-        case ("CONNECT", headers, _) =>
-          dbg( s"stomp connection: $headers" )
+      if (message == "\n" || message == "\r\n") {
+        dbg( s"heart beat received" )
+      } else
+        parseMessage( message ) match {
+          case ("CONNECT", headers, _) =>
+            dbg( s"stomp connection: $headers" )
 
-          if (headers get "Authorization" match {
-            case None => true
-            case Some( token ) => authorize( token )
-          }) {
-            sendMessage(conn, "CONNECTED",
-              List(
-                "version" -> "1.2",
-                "heart-beat" -> "10000,10000",
-                "session" -> createSession,
-                "server" -> name))
-          } else {
-            dbg( s"*** not authorized" )
-          }
-        case ("SUBSCRIBE", headers, _) =>
-          val key = SubscriptionKey( conn.remoteAddress, conn.remotePort, headers("id") )
+            if (headers get "Authorization" match {
+              case None => true
+              case Some( token ) => authorize( token )
+            }) {
+              val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
 
-          dbg( s"subscribe: $headers" )
-          subscriptions get key match {
-            case Some( _ ) =>
-              dbg( s"*** subscription duplicate: $key" )
-            case None =>
-              subscriptions(key) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
-          }
-      }
+              connections(connectionKey) = beats
+              dbg( s"send heart beats every $beats millisends" )
+              sendMessage(conn, "CONNECTED",
+                List(
+                  "version" -> "1.2",
+                  "heart-beat" -> "10000,10000",
+                  "session" -> createSession,
+                  "server" -> name))
+            } else {
+              dbg( s"*** not authorized" )
+            }
+          case ("SUBSCRIBE", headers, _) =>
+            val key = SubscriptionKey( connectionKey, headers("id") )
+
+            dbg( s"subscribe: $headers" )
+            subscriptions get key match {
+              case Some( _ ) =>
+                dbg( s"*** subscription duplicate: $key" )
+              case None =>
+                subscriptions(key) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
+            }
+        }
     } )
   } )
 
@@ -102,7 +114,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   object parseMessage extends {
 
     private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
-    private val HeaderRegex = """([a-z0-9\\]+):(.+)"""r
+    private val HeaderRegex = """([a-zA-Z0-9-\\]+):(.+)"""r
 
     def apply( message: String ) = {
       dbg( s"parseMessage: ${escape(message)}" )
