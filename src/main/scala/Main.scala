@@ -1,5 +1,7 @@
 package xyz.hyperreal.stomp_server
 
+import typings.node.process
+import typings.node.nodeStrings
 import typings.node.httpMod
 import typings.node.httpMod.{ClientRequest, ServerResponse}
 import typings.uuid.uuidMod
@@ -9,6 +11,7 @@ import typings.sockjs.sockjsStrings
 
 import scala.scalajs.js
 import scala.scalajs.js.RegExp
+
 import collection.mutable
 
 
@@ -20,18 +23,30 @@ object Main extends App {
 
   val server = new StompServer( "ShuttleControl/1.0", authorize, true )
 
+  println( "type message" )
+
+  process.stdin.setEncoding( "utf-8" )
+
+  process.stdin.on_data( nodeStrings.data,
+    body => {
+      println( "sending..." )
+      server.send( "data", uuidMod.^.v1, body.toString )
+    } )
+
 }
 
 class StompServer( name: String, authorize: String => Boolean, debug: Boolean = false ) {
 
-  case class Subscriber( conn: Client, id: String )
+  case class Subscriber( client: Client, subscriptionId: String )
   case class Subscription( queue: String, ack: String )
 
   case class Client( removeAddress: String, remotePort: Double )
 
+  case class StompConnection( conn: Connection, beats: Int )
+
   private val sockjs_echo = sockjs.sockjsMod.createServer()
   private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
-  private val connections = new mutable.HashMap[Client, Int]
+  private val connections = new mutable.HashMap[Client, StompConnection]
   private val queues = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
@@ -52,7 +67,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             }) {
               val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
 
-              connections(connectionKey) = beats
+              connections(connectionKey) = StompConnection( conn, beats )
+
               dbg( s"send heart beats every $beats millisends" )
               sendMessage(conn, "CONNECTED",
                 List(
@@ -78,7 +94,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
                 val subscribers =
                   queues get queue match {
                     case None =>
-                      dbg( s"created queue: $queue" )
+                      dbg( s"created queue '$queue' for $subscriber" )
                       new mutable.HashSet[Subscriber]
                     case Some( subs ) => subs += subscriber
                   }
@@ -102,8 +118,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
   private def sendMessage( conn: Connection, command: String, headers: List[(String, String)], body: String = "" ) = {
     val escapedHeaders = headers map {case (k, v) => s"${escape(k)}:${escape( v )}"} mkString "\n"
+    val message = s"$command\n$escapedHeaders\n\n${body}\u0000"
 
-    conn.write( s"$command\n$escapedHeaders\n\n${body}\u0000" )
+    dbg( s"sending message '${escape(message)}' to $conn" )
+    conn.write( message )
   }
 
   private def createSession = {
@@ -122,8 +140,22 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
     if (debug)
       println( s"DEBUG $s" )
 
-  def send( destination: String, message: String ): Unit = {
-
+  def send( queue: String, messageId: String, body: String, mime: String = "text/plain" ): Unit = {
+    queues get queue match {
+      case None =>
+      case Some( subs ) =>
+        for (Subscriber(client, subscriptionId) <- subs) {
+          dbg( s"messaging $client, queue $queue: '$body'")
+          sendMessage( connections(client).conn, "MESSAGE",
+            List(
+              "subscription" -> subscriptionId,
+              "message-id" -> messageId,
+              "destination" -> queue,
+              "content-type" -> mime,
+              "content-length" -> body.length.toString),
+            body )
+        }
+    }
   }
 
   object parseMessage extends {
