@@ -24,17 +24,18 @@ object Main extends App {
 
 class StompServer( name: String, authorize: String => Boolean, debug: Boolean = false ) {
 
-  case class SubscriptionKey( conn: ConnectionKey, id: String )
-  case class Subscription( destination: String, ack: String )
+  case class Subscriber( conn: Client, id: String )
+  case class Subscription( queue: String, ack: String )
 
-  case class ConnectionKey( removeAddress: String, remotePort: Double )
+  case class Client( removeAddress: String, remotePort: Double )
 
   private val sockjs_echo = sockjs.sockjsMod.createServer()
-  private val subscriptions = new mutable.HashMap[SubscriptionKey, Subscription]
-  private val connections = new mutable.HashMap[ConnectionKey, Int]
+  private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
+  private val connections = new mutable.HashMap[Client, Int]
+  private val queues = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
-    val connectionKey = ConnectionKey( conn.remoteAddress, conn.remotePort )
+    val connectionKey = Client( conn.remoteAddress, conn.remotePort )
 
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
     conn.on( "data", (message: String) => {
@@ -63,14 +64,26 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
               dbg( s"*** not authorized" )
             }
           case ("SUBSCRIBE", headers, _) =>
-            val key = SubscriptionKey( connectionKey, headers("id") )
+            val subscriber = Subscriber( connectionKey, headers("id") )
 
             dbg( s"subscribe: $headers" )
-            subscriptions get key match {
+            subscriptions get subscriber match {
               case Some( _ ) =>
-                dbg( s"*** subscription duplicate: $key" )
+                dbg( s"*** subscription duplicate: $subscriber" )
               case None =>
-                subscriptions(key) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
+                val queue = headers("destination")
+
+                subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
+
+                val subscribers =
+                  queues get queue match {
+                    case None =>
+                      dbg( s"created queue: $queue" )
+                      new mutable.HashSet[Subscriber]
+                    case Some( subs ) => subs += subscriber
+                  }
+
+                queues(queue) = subscribers
             }
         }
     } )
@@ -88,9 +101,9 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   server.listen( 15674, "0.0.0.0" )
 
   private def sendMessage( conn: Connection, command: String, headers: List[(String, String)], body: String = "" ) = {
-    val escaped = headers map {case (k, v) => s"${escape(k)}:${escape( v )}"} mkString "\n"
+    val escapedHeaders = headers map {case (k, v) => s"${escape(k)}:${escape( v )}"} mkString "\n"
 
-    conn.write( s"$command\n$escaped\n\n${body}\u0000" )
+    conn.write( s"$command\n$escapedHeaders\n\n${body}\u0000" )
   }
 
   private def createSession = {
@@ -109,7 +122,9 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
     if (debug)
       println( s"DEBUG $s" )
 
-  //def send( destination: )
+  def send( destination: String, message: String ): Unit = {
+
+  }
 
   object parseMessage extends {
 
