@@ -117,7 +117,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   server.listen( 15674, "0.0.0.0" )
 
   private def sendMessage( conn: Connection, command: String, headers: List[(String, String)], body: String = "" ) = {
-    val escapedHeaders = headers map {case (k, v) => s"${escape(k)}:${escape( v )}"} mkString "\n"
+    val escapedHeaders = headers map { case (k, v) => s"${escape( k )}:${escape( v )}" } mkString "\n"
     val message = s"$command\n$escapedHeaders\n\n${body}\u0000"
 
     dbg( s"sending message '${escape(message)}' to $conn" )
