@@ -65,61 +65,62 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
 
-    conn.on( "data", (message: String) => {
+    conn.on( "data", listener = (message: String) => {
       if (message == "\n" || message == "\r\n") {
-        dbg( s"heart beat received" )
+        dbg(s"heart beat received")
       } else
-        parseMessage( message ) match {
+        parseMessage(message) match {
           case ("CONNECT", headers, _) =>
-            dbg( s"stomp connection: $headers" )
+            dbg(s"stomp connection: $headers")
 
             if (headers get "Authorization" match {
               case None => true
-              case Some( token ) => authorize( token )
+              case Some(token) => authorize(token)
             }) {
               val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
 
-              connections(connectionKey) = StompConnection( conn, beats )
+              connections(connectionKey) = StompConnection(conn, beats)
 
-              dbg( s"send heart beats every $beats millisends" )
-              sendMessage( conn, "CONNECTED",
+              dbg(s"send heart beats every $beats millisends")
+              sendMessage(conn, "CONNECTED",
                 List(
                   "version" -> "1.2",
                   "heart-beat" -> "10000,10000",
                   "session" -> createSession,
                   "server" -> name))
             } else {
-              dbg( s"*** not authorized" )
+              dbg(s"*** not authorized")
             }
           case ("SUBSCRIBE", headers, _) =>
-            val subscriber = Subscriber( connectionKey, headers("id") )
+            val subscriber = Subscriber(connectionKey, headers("id"))
 
-            dbg( s"subscribe: $headers" )
+            dbg(s"subscribe: $headers")
 
             if (subscriptions contains subscriber)
-              dbg( s"*** subscription duplicate: $subscriber" )
+              dbg(s"*** subscription duplicate: $subscriber")
             else {
               val queue = headers("destination")
 
-              subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
+              subscriptions(subscriber) = Subscription(headers("destination"), headers.getOrElse("ack", "auto"))
 
               val subscribers =
                 queues get queue match {
                   case None =>
-                    dbg( s"created queue '$queue' for $subscriber" )
+                    dbg(s"created queue '$queue' for $subscriber")
                     new mutable.HashSet[Subscriber]
-                  case Some( subs ) => subs += subscriber
+                  case Some(subs) => subs += subscriber
                 }
 
               queues(queue) = subscribers
+              receipt( conn, headers )
             }
           case ("UNSUBSCRIBE", headers, _) =>
-            val subscriber = Subscriber( connectionKey, headers("id") )
+            val subscriber = Subscriber(connectionKey, headers("id"))
 
-            dbg( s"unsubscribe: $headers" )
+            dbg(s"unsubscribe: $headers")
 
             subscriptions get subscriber match {
-              case Some( Subscription(queue, _) ) =>
+              case Some(Subscription(queue, _)) =>
                 subscriptions -= subscriber
 
                 val set = queues(queue)
@@ -129,22 +130,24 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
                 if (set isEmpty)
                   queues -= queue
               case None =>
-                dbg( s"*** subscription not found: $subscriber" )
+                dbg(s"*** subscription not found: $subscriber")
             }
           case ("DISCONNECT", headers, _) =>
-            dbg( s"disconnect: $headers, $connectionKey" )
-            sendMessage( conn, "RECEIPT", List("receipt-id" -> headers("receipt")) )
+            dbg(s"disconnect: $headers, $connectionKey")
+            receipt( conn, headers )
             // todo: close the connection after a small delay
             conn.close
           case ("SEND", headers, body) =>
-            dbg( s"send: $headers, $body" )
+            dbg(s"send: $headers, $body")
 
             headers get "transaction" match {
-              case Some( tx ) => addToTransaction( tx, headers, body )
+              case Some(tx) => addToTransaction(tx, headers, body)
               case None => send( headers("destination"), body, headers.getOrElse("content-type", "text/plain") )
             }
+
+            receipt( conn, headers )
           case ("BEGIN", headers, _) =>
-            dbg( s"begin: $headers" )
+            dbg(s"begin: $headers")
 
             val tx = headers("transaction")
 
@@ -153,10 +156,21 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             } else
               transactions(tx) = new ListBuffer[Message]
           case ("COMMIT", headers, _) =>
-            dbg( s"commit: $headers" )
+            dbg(s"commit: $headers")
 
+            val tx = headers("transaction")
+
+            transactions get tx match {
+              case None =>
+              // todo: error: transaction doesn't exist
+              case Some( msgs ) =>
+                for (Message( queue, body, contentType ) <- msgs)
+                  send( queue, body, contentType )
+
+                transactions -= tx
+            }
           case ("ABORT", headers, _) =>
-            dbg( s"abort: $headers" )
+            dbg(s"abort: $headers")
 
             val tx = headers("transaction")
 
@@ -209,6 +223,17 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   private def dbg( s: String ) =
     if (debug)
       println( s"DEBUG $s" )
+
+  private def receipt( conn: Connection, headers: Map[String, String] ): Unit = {
+    headers get "receipt" match {
+      case None =>
+      case Some( r ) => sendMessage( conn, "RECEIPT", List("receipt-id" -> r) )
+    }
+  }
+
+  def error( ): Unit = {
+
+  }
 
   def send( queue: String, body: String, contentType: String = "text/plain" ): Unit = {
     queues get queue match {
