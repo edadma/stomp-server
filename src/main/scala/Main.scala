@@ -93,9 +93,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
               dbg(s"*** not authorized")
             }
           case ("SUBSCRIBE", headers, _) =>
-            val subscriber = Subscriber(connectionKey, headers("id"))
-
             dbg(s"subscribe: $headers")
+            required( conn, message, headers, "destination", "id" )
+
+            val subscriber = Subscriber(connectionKey, headers("id"))
 
             if (subscriptions contains subscriber)
               dbg(s"*** subscription duplicate: $subscriber")
@@ -116,9 +117,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
               receipt( conn, headers )
             }
           case ("UNSUBSCRIBE", headers, _) =>
-            val subscriber = Subscriber(connectionKey, headers("id"))
+            dbg( s"unsubscribe: $headers")
+            required( conn, message, headers, "id" )
 
-            dbg(s"unsubscribe: $headers")
+            val subscriber = Subscriber( connectionKey, headers("id") )
 
             subscriptions get subscriber match {
               case Some(Subscription(queue, _)) =>
@@ -131,17 +133,18 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
                 if (set isEmpty)
                   queues -= queue
               case None =>
-                dbg(s"*** subscription not found: $subscriber")
+                dbg( s"*** subscription not found: $subscriber" )
             }
 
             receipt( conn, headers )
           case ("DISCONNECT", headers, _) =>
-            dbg(s"disconnect: $headers, $connectionKey")
+            dbg( s"disconnect: $headers, $connectionKey" )
             receipt( conn, headers )
             // todo: close the connection after a small delay
             disconnect( conn )
           case ("SEND", headers, body) =>
-            dbg(s"send: $headers, $body")
+            dbg( s"send: $headers, $body" )
+            required( conn, message, headers, "destination" )
 
             headers get "transaction" match {
               case Some(tx) => addToTransaction(tx, headers, body)
@@ -150,7 +153,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
             receipt( conn, headers )
           case ("BEGIN", headers, _) =>
-            dbg(s"begin: $headers")
+            dbg( s"begin: $headers" )
+            required( conn, message, headers, "transaction" )
 
             val tx = headers("transaction")
 
@@ -161,7 +165,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
             receipt( conn, headers )
           case ("COMMIT", headers, _) =>
-            dbg(s"commit: $headers")
+            dbg( s"commit: $headers" )
+            required( conn, message, headers, "transaction" )
 
             val tx = headers("transaction")
 
@@ -177,7 +182,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
             receipt( conn, headers )
           case ("ABORT", headers, _) =>
-            dbg(s"abort: $headers")
+            dbg( s"abort: $headers" )
+            required( conn, message, headers, "transaction" )
 
             val tx = headers("transaction")
 
@@ -189,10 +195,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
             receipt( conn, headers )
           case ("ACK", headers, _) =>
-            dbg(s"ack: $headers")
+            dbg( s"ack: $headers" )
 
           case ("NACK", headers, _) =>
-            dbg(s"nack: $headers")
+            dbg( s"nack: $headers" )
         }
     } )
   } )
