@@ -69,9 +69,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
       if (message == "\n" || message == "\r\n") {
         dbg(s"heart beat received")
       } else
-        parseMessage(message) match {
+        parseMessage( message ) match {
           case ("CONNECT"|"STOMP", headers, _) =>
             dbg(s"stomp connection: $headers")
+            required( conn, message, headers, "accept-version", "host" )
 
             if (headers get "Authorization" match {
               case None => true
@@ -138,7 +139,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             dbg(s"disconnect: $headers, $connectionKey")
             receipt( conn, headers )
             // todo: close the connection after a small delay
-            conn.close
+            disconnect( conn )
           case ("SEND", headers, body) =>
             dbg(s"send: $headers, $body")
 
@@ -188,7 +189,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
             receipt( conn, headers )
           case ("ACK", headers, _) =>
+            dbg(s"ack: $headers")
+
           case ("NACK", headers, _) =>
+            dbg(s"nack: $headers")
         }
     } )
   } )
@@ -239,8 +243,45 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
     }
   }
 
-  def error( ): Unit = {
+  private def required( conn: Connection, message: String, headers: Map[String, String], requiredHeaders: String* ) = {
+    val requiredSet = requiredHeaders.toSet
+    val missingSet = requiredSet -- (headers.keySet intersect requiredSet)
 
+    if (missingSet nonEmpty) {
+      val missing = missingSet.head
+
+      dbg( s"*** missing headers: $missingSet" )
+      error( conn, headers, "malformed frame received",
+        s"""
+           |The message:
+           |-----
+           |$message
+           |-----
+           |Did not contain a $missing header, which is REQUIRED
+           |""".stripMargin )
+      disconnect( conn )
+      false
+    } else
+      true
+  }
+
+  private def disconnect( conn: Connection ) = {
+    // todo: keep connection going and then disconnect
+    conn.close
+  }
+
+  def error( conn: Connection, headers: Map[String, String], message: String, body: String ): Unit = {
+    val errorHeaders =
+      List(
+        "content-type" -> "text/plain",
+        "content-length" -> body.length.toString,
+        "message" -> message
+      ) ++ (headers get "receipt" match {
+        case None => Nil
+        case Some( r ) => List( "receipt-id" -> r )
+      })
+
+    sendMessage( conn, "ERROR", errorHeaders, body )
   }
 
   def send( queue: String, body: String, contentType: String = "text/plain" ): Unit = {
