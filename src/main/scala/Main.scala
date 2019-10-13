@@ -70,7 +70,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
         dbg(s"heart beat received")
       } else
         parseMessage(message) match {
-          case ("CONNECT", headers, _) =>
+          case ("CONNECT"|"STOMP", headers, _) =>
             dbg(s"stomp connection: $headers")
 
             if (headers get "Authorization" match {
@@ -101,13 +101,13 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             else {
               val queue = headers("destination")
 
-              subscriptions(subscriber) = Subscription(headers("destination"), headers.getOrElse("ack", "auto"))
+              subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
 
               val subscribers =
                 queues get queue match {
                   case None =>
                     dbg(s"created queue '$queue' for $subscriber")
-                    new mutable.HashSet[Subscriber]
+                    mutable.HashSet[Subscriber]( subscriber )
                   case Some(subs) => subs += subscriber
                 }
 
@@ -132,6 +132,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
               case None =>
                 dbg(s"*** subscription not found: $subscriber")
             }
+
+            receipt( conn, headers )
           case ("DISCONNECT", headers, _) =>
             dbg(s"disconnect: $headers, $connectionKey")
             receipt( conn, headers )
@@ -155,6 +157,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
               // todo: error: transaction already begun
             } else
               transactions(tx) = new ListBuffer[Message]
+
+            receipt( conn, headers )
           case ("COMMIT", headers, _) =>
             dbg(s"commit: $headers")
 
@@ -169,6 +173,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
                 transactions -= tx
             }
+
+            receipt( conn, headers )
           case ("ABORT", headers, _) =>
             dbg(s"abort: $headers")
 
@@ -179,6 +185,8 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             else {
               // todo: error: transaction not begun
             }
+
+            receipt( conn, headers )
           case ("ACK", headers, _) =>
           case ("NACK", headers, _) =>
         }
@@ -239,6 +247,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
     queues get queue match {
       case None =>
       case Some( subs ) =>
+        println( subs)
         for (Subscriber(client, subscriptionId) <- subs) {
           dbg( s"messaging $client, queue $queue: '$body'")
           sendMessage( connections(client).conn, "MESSAGE",
