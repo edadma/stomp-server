@@ -17,11 +17,11 @@ import scala.collection.mutable.ListBuffer
 
 object Main extends App {
 
-  def authorize( token: String ) = {
+  def authorize( headers: Map[String, String] ) = {
     true
   }
 
-  val server = new StompServer( "ShuttleControl/1.0", authorize, true )
+  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/ws", authorize, true )
 
   println( "type message" )
 
@@ -41,7 +41,7 @@ object StompServer {
 
 }
 
-class StompServer( name: String, authorize: String => Boolean, debug: Boolean = false ) {
+class StompServer( name: String, hostname: String, port: Int, path: String, authorized: Map[String, String] => Boolean, debug: Boolean = false ) {
 
   import StompServer._
 
@@ -74,10 +74,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             dbg(s"stomp connection: $headers")
             required( conn, message, headers, "accept-version", "host" )
 
-            if (headers get "Authorization" match {
-              case None => true
-              case Some(token) => authorize(token)
-            }) {
+            if (authorized( headers )) {
               val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
 
               connections(connectionKey) = StompConnection(conn, beats)
@@ -206,13 +203,13 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   private val server = httpMod.createServer()
 
   server.addListener("upgrade", (reqres: js.Any) => {
-    println( "upgrade" )
+    dbg( "upgrade" )
     reqres.asInstanceOf[Array[js.Any]](0).asInstanceOf[ClientRequest].end()
   } )
 
-  sockjs_echo.installHandlers( server, js.Dynamic.literal(prefix = "/ws").asInstanceOf[ServerOptions] )
-  println(" [*] Listening on 0.0.0.0:15674")
-  server.listen( 15674, "0.0.0.0" )
+  sockjs_echo.installHandlers( server, js.Dynamic.literal(prefix = path).asInstanceOf[ServerOptions] )
+  println( s"Listening on $hostname:$port")
+  server.listen( port, hostname )
 
   private def addToTransaction( transaction: String, headers: Map[String, String], body: String ) = {
     transactions(transaction) += Message( headers("destination"), body, headers.getOrElse("content-type", DEFAULT_CONTENT_TYPE) )
@@ -290,11 +287,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
     sendMessage( conn, "ERROR", errorHeaders, body )
   }
 
-  def send( queue: String, body: String, contentType: String = "text/plain" ): Unit = {
+  def send( queue: String, body: String, contentType: String = "text/plain" ): Unit =
     queues get queue match {
       case None =>
       case Some( subs ) =>
-        println( subs)
         for (Subscriber(client, subscriptionId) <- subs) {
           dbg( s"messaging $client, queue $queue: '$body'")
           sendMessage( connections(client).conn, "MESSAGE",
@@ -307,7 +303,6 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             body )
         }
     }
-  }
 
   object parseMessage extends {
 
