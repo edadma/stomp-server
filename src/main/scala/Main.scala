@@ -11,8 +11,8 @@ import typings.sockjs.sockjsStrings
 
 import scala.scalajs.js
 import scala.scalajs.js.RegExp
-
 import collection.mutable
+import scala.collection.mutable.ListBuffer
 
 
 object Main extends App {
@@ -30,12 +30,20 @@ object Main extends App {
   process.stdin.on_data( nodeStrings.data,
     body => {
       println( "sending..." )
-      server.send( "data", uuidMod.^.v1, body.toString )
+      server.send( "data", body.toString )
     } )
 
 }
 
+object StompServer {
+
+  private val DEFAULT_CONTENT_TYPE = "text/plain"
+
+}
+
 class StompServer( name: String, authorize: String => Boolean, debug: Boolean = false ) {
+
+  import StompServer._
 
   case class Subscriber( client: Client, subscriptionId: String )
   case class Subscription( queue: String, ack: String )
@@ -44,15 +52,19 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
 
   case class StompConnection( conn: Connection, beats: Int )
 
+  case class Message( queue: String, body: String, contentType: String )
+
   private val sockjs_echo = sockjs.sockjsMod.createServer()
   private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
   private val connections = new mutable.HashMap[Client, StompConnection]
   private val queues = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
+  private val transactions = new mutable.HashMap[String, ListBuffer[Message]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
     val connectionKey = Client( conn.remoteAddress, conn.remotePort )
 
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
+
     conn.on( "data", (message: String) => {
       if (message == "\n" || message == "\r\n") {
         dbg( s"heart beat received" )
@@ -70,7 +82,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
               connections(connectionKey) = StompConnection( conn, beats )
 
               dbg( s"send heart beats every $beats millisends" )
-              sendMessage(conn, "CONNECTED",
+              sendMessage( conn, "CONNECTED",
                 List(
                   "version" -> "1.2",
                   "heart-beat" -> "10000,10000",
@@ -83,24 +95,78 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
             val subscriber = Subscriber( connectionKey, headers("id") )
 
             dbg( s"subscribe: $headers" )
-            subscriptions get subscriber match {
-              case Some( _ ) =>
-                dbg( s"*** subscription duplicate: $subscriber" )
-              case None =>
-                val queue = headers("destination")
 
-                subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
+            if (subscriptions contains subscriber)
+              dbg( s"*** subscription duplicate: $subscriber" )
+            else {
+              val queue = headers("destination")
 
-                val subscribers =
-                  queues get queue match {
-                    case None =>
-                      dbg( s"created queue '$queue' for $subscriber" )
-                      new mutable.HashSet[Subscriber]
-                    case Some( subs ) => subs += subscriber
-                  }
+              subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
 
-                queues(queue) = subscribers
+              val subscribers =
+                queues get queue match {
+                  case None =>
+                    dbg( s"created queue '$queue' for $subscriber" )
+                    new mutable.HashSet[Subscriber]
+                  case Some( subs ) => subs += subscriber
+                }
+
+              queues(queue) = subscribers
             }
+          case ("UNSUBSCRIBE", headers, _) =>
+            val subscriber = Subscriber( connectionKey, headers("id") )
+
+            dbg( s"unsubscribe: $headers" )
+
+            subscriptions get subscriber match {
+              case Some( Subscription(queue, _) ) =>
+                subscriptions -= subscriber
+
+                val set = queues(queue)
+
+                set -= subscriber
+
+                if (set isEmpty)
+                  queues -= queue
+              case None =>
+                dbg( s"*** subscription not found: $subscriber" )
+            }
+          case ("DISCONNECT", headers, _) =>
+            dbg( s"disconnect: $headers, $connectionKey" )
+            sendMessage( conn, "RECEIPT", List("receipt-id" -> headers("receipt")) )
+            // todo: close the connection after a small delay
+            conn.close
+          case ("SEND", headers, body) =>
+            dbg( s"send: $headers, $body" )
+
+            headers get "transaction" match {
+              case Some( tx ) => addToTransaction( tx, headers, body )
+              case None => send( headers("destination"), body, headers.getOrElse("content-type", "text/plain") )
+            }
+          case ("BEGIN", headers, _) =>
+            dbg( s"begin: $headers" )
+
+            val tx = headers("transaction")
+
+            if (transactions contains tx) {
+              // todo: error: transaction already begun
+            } else
+              transactions(tx) = new ListBuffer[Message]
+          case ("COMMIT", headers, _) =>
+            dbg( s"commit: $headers" )
+
+          case ("ABORT", headers, _) =>
+            dbg( s"abort: $headers" )
+
+            val tx = headers("transaction")
+
+            if (transactions contains tx)
+              transactions -= tx
+            else {
+              // todo: error: transaction not begun
+            }
+          case ("ACK", headers, _) =>
+          case ("NACK", headers, _) =>
         }
     } )
   } )
@@ -115,6 +181,10 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   sockjs_echo.installHandlers( server, js.Dynamic.literal(prefix = "/ws").asInstanceOf[ServerOptions] )
   println(" [*] Listening on 0.0.0.0:15674")
   server.listen( 15674, "0.0.0.0" )
+
+  private def addToTransaction( transaction: String, headers: Map[String, String], body: String ) = {
+    transactions(transaction) += Message( headers("destination"), body, headers.getOrElse("content-type", DEFAULT_CONTENT_TYPE) )
+  }
 
   private def sendMessage( conn: Connection, command: String, headers: List[(String, String)], body: String = "" ) = {
     val escapedHeaders = headers map { case (k, v) => s"${escape( k )}:${escape( v )}" } mkString "\n"
@@ -140,7 +210,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
     if (debug)
       println( s"DEBUG $s" )
 
-  def send( queue: String, messageId: String, body: String, mime: String = "text/plain" ): Unit = {
+  def send( queue: String, body: String, contentType: String = "text/plain" ): Unit = {
     queues get queue match {
       case None =>
       case Some( subs ) =>
@@ -149,9 +219,9 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
           sendMessage( connections(client).conn, "MESSAGE",
             List(
               "subscription" -> subscriptionId,
-              "message-id" -> messageId,
+              "message-id" -> uuidMod.^.v1,
               "destination" -> queue,
-              "content-type" -> mime,
+              "content-type" -> contentType,
               "content-length" -> body.length.toString),
             body )
         }
