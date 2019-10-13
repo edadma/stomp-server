@@ -155,7 +155,6 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
           case ("COMMIT", headers, _) =>
             dbg( s"commit: $headers" )
 
-            transactions get
           case ("ABORT", headers, _) =>
             dbg( s"abort: $headers" )
 
@@ -184,7 +183,7 @@ class StompServer( name: String, authorize: String => Boolean, debug: Boolean = 
   server.listen( 15674, "0.0.0.0" )
 
   private def addToTransaction( transaction: String, headers: Map[String, String], body: String ) = {
-    transactions(transaction) += Message( headers("destination"), body, headers.getOrElse("content-type"), DEFAULT_CONTENT_TYPE )
+    transactions(transaction) += Message( headers("destination"), body, headers.getOrElse("content-type", DEFAULT_CONTENT_TYPE) )
   }
 
   private def sendMessage( conn: Connection, command: String, headers: List[(String, String)], body: String = "" ) = {
