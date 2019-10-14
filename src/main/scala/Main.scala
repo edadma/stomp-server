@@ -20,7 +20,7 @@ object Main extends App {
     true
   }
 
-  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/ws", authorize, true )
+  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", authorize, true )
 
   println( "type message" )
 
@@ -72,7 +72,8 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
         parseMessage( message ) match {
           case ("CONNECT"|"STOMP", headers, _) =>
             dbg(s"stomp connection: $headers")
-            required( conn, message, headers, "accept-version", "host" )
+//            required( conn, message, headers, "accept-version", "host" )// todo: shuttlecontrol frontend doesn't put 'host' header
+            required( conn, message, headers, "accept-version" )
 
             def heartBeat( a: js.Any ) = {
               conn.write( "\n" )
