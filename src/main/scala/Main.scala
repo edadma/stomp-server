@@ -1,10 +1,7 @@
 package xyz.hyperreal.stomp_server
 
 import typings.node.NodeJS.Timeout
-import typings.node.{clearInterval, setInterval}
-import typings.node.process
-import typings.node.nodeStrings
-import typings.node.httpMod
+import typings.node.{clearInterval, httpMod, nodeStrings, process, setInterval, setTimeout}
 import typings.node.httpMod.{ClientRequest, ServerResponse}
 import typings.uuid.uuidMod
 import typings.sockjs
@@ -40,6 +37,7 @@ object Main extends App {
 object StompServer {
 
   private val DEFAULT_CONTENT_TYPE = "text/plain"
+  private val CONNECTION_LINGERING_DELAY = 200
 
 }
 
@@ -278,8 +276,8 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
   }
 
   private def disconnect( conn: Connection ) = {
-    // todo: keep connection going and then disconnect
-    conn.close
+    clearInterval( connections(Client(conn.remoteAddress, conn.remotePort)).timer )
+    setTimeout( _ => conn.close, CONNECTION_LINGERING_DELAY )
   }
 
   def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
