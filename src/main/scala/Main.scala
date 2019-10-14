@@ -76,9 +76,14 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
             dbg(s"stomp connection: $headers")
             required( conn, message, headers, "accept-version", "host" )
 
+            def heartBeat( a: js.Any ) = {
+              conn.write( "\n" )
+              dbg( "send heart beat" )
+            }
+
             if (authorized( headers )) {
               val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
-              val timer = setInterval( _ => conn.write("\n"), beats )
+              val timer = setInterval( heartBeat, beats )
 
               connections(connectionKey) = StompConnection(conn, beats, timer)
 
