@@ -1,5 +1,7 @@
 package xyz.hyperreal.stomp_server
 
+import typings.node.NodeJS.Timeout
+import typings.node.{clearInterval, setInterval}
 import typings.node.process
 import typings.node.nodeStrings
 import typings.node.httpMod
@@ -50,7 +52,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
   case class Client( removeAddress: String, remotePort: Double )
 
-  case class StompConnection( conn: Connection, beats: Int )
+  case class StompConnection( conn: Connection, beats: Int, timer: Timeout )
 
   case class Message( queue: String, body: String, contentType: String )
 
@@ -61,7 +63,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
   private val transactions = new mutable.HashMap[String, ListBuffer[Message]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
-    val connectionKey = Client( conn.remoteAddress, conn.remotePort )
+    val connectionKey = Client( conn.remoteAddress, conn.remotePort )//(conn.remoteAddress, conn.remotePort)
 
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
 
@@ -76,28 +78,31 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
             if (authorized( headers )) {
               val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
+              val timer = setInterval( _ => conn.write("\n"), beats )
 
-              connections(connectionKey) = StompConnection(conn, beats)
+              connections(connectionKey) = StompConnection(conn, beats, timer)
 
-              dbg(s"send heart beats every $beats millisends")
-              sendMessage(conn, "CONNECTED",
+              dbg( s"send heart beats every $beats millisends" )
+              sendMessage( conn, "CONNECTED",
                 List(
                   "version" -> "1.2",
                   "heart-beat" -> "10000,10000",
                   "session" -> createSession,
-                  "server" -> name))
+                  "server" -> name) )
             } else {
-              dbg(s"*** not authorized")
+              dbg( s"*** not authorized" )
+              error( conn, headers, "not authorized" )
             }
           case ("SUBSCRIBE", headers, _) =>
-            dbg(s"subscribe: $headers")
+            dbg( s"subscribe: $headers" )
             required( conn, message, headers, "destination", "id" )
 
             val subscriber = Subscriber(connectionKey, headers("id"))
 
-            if (subscriptions contains subscriber)
-              dbg(s"*** subscription duplicate: $subscriber")
-            else {
+            if (subscriptions contains subscriber) {
+              dbg(s"*** duplicate subscription: $subscriber")
+              error( conn, headers, "duplicate subscription" )
+            } else {
               val queue = headers("destination")
 
               subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
@@ -131,13 +136,13 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
                   queues -= queue
               case None =>
                 dbg( s"*** subscription not found: $subscriber" )
+                error( conn, headers, "subscription not found" )
             }
 
             receipt( conn, headers )
           case ("DISCONNECT", headers, _) =>
             dbg( s"disconnect: $headers, $connectionKey" )
             receipt( conn, headers )
-            // todo: close the connection after a small delay
             disconnect( conn )
           case ("SEND", headers, body) =>
             dbg( s"send: $headers, $body" )
@@ -220,6 +225,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
     dbg( s"sending message '${escape(message)}' to $conn" )
     conn.write( message )
+    connections(Client(conn.remoteAddress, conn.remotePort)).timer.refresh
   }
 
   private def createSession = {
