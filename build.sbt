@@ -26,11 +26,21 @@ npmDependencies in Compile ++=
   Seq(
     "uuid" -> "3.3.3",
     "sockjs" -> "^0.3.19",
+    // testing
+    "sockjs-client" -> "1.4.0",
+    "stompjs-client" -> "5.4.2"
 )
 
 libraryDependencies ++= Seq(
   ScalablyTyped.U.uuid,
-  ScalablyTyped.S.sockjs
+  ScalablyTyped.S.sockjs,
+  ScalablyTyped.S.`sockjs-client`,
+  ScalablyTyped.S.stompjs
+)
+
+libraryDependencies ++= Seq(
+  "org.scalatest" %%% "scalatest" % "3.0.8" % "test",
+  "org.scalacheck" %%% "scalacheck" % "1.14.1" % "test"
 )
 
 coverageExcludedPackages := ".*Main"
