@@ -28,7 +28,7 @@ npmDependencies in Compile ++=
     "sockjs" -> "^0.3.19",
     // testing
     "sockjs-client" -> "1.4.0",
-    "stompjs-client" -> "5.4.2"
+    "stompjs" -> "2.3.3"
 )
 
 libraryDependencies ++= Seq(
