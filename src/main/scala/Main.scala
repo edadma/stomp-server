@@ -155,9 +155,9 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
             val tx = headers("transaction")
 
-            if (transactions contains tx) {
-              // todo: error: transaction already begun
-            } else
+            if (transactions contains tx)
+              error( conn, headers, "transaction already begun" )
+            else
               transactions(tx) = new ListBuffer[Message]
 
             receipt( conn, headers )
@@ -168,8 +168,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
             val tx = headers("transaction")
 
             transactions get tx match {
-              case None =>
-              // todo: error: transaction doesn't exist
+              case None => error( conn, headers, "transaction doesn't exist" )
               case Some( msgs ) =>
                 for (Message( queue, body, contentType ) <- msgs)
                   send( queue, body, contentType )
@@ -262,7 +261,6 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
            |-----
            |Did not contain a $missing header, which is REQUIRED
            |""".stripMargin )
-      disconnect( conn )
       false
     } else
       true
@@ -273,7 +271,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
     conn.close
   }
 
-  def error( conn: Connection, headers: Map[String, String], message: String, body: String ): Unit = {
+  def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
     val errorHeaders =
       List(
         "content-type" -> "text/plain",
@@ -285,6 +283,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
       })
 
     sendMessage( conn, "ERROR", errorHeaders, body )
+    disconnect( conn )
   }
 
   def send( queue: String, body: String, contentType: String = "text/plain" ): Unit =
