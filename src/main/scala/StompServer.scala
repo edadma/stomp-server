@@ -18,6 +18,8 @@ object StompServer {
 
   private val DEFAULT_CONTENT_TYPE = "text/plain"
   private val CONNECTION_LINGERING_DELAY = 1000
+  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
+  private val HeaderRegex = """([a-zA-Z0-9-\\]+):(.+)"""r
 
 }
 
@@ -39,16 +41,16 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
   private val transactions = new mutable.HashMap[String, ListBuffer[Message]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
-    dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
+    dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}, $conn" )
 
     conn.on( "data", listener = (message: String) => {
       if (message == "\n" || message == "\r\n") {
         dbg(s"heart beat received")
       } else
-        parseMessage( message ) match {
+        parseMessage( message, conn ) match {
           case ("CONNECT"|"STOMP", headers, _) =>
-            dbg(s"stomp connection: $headers")
-            //            required( conn, message, headers, "accept-version", "host" )// todo: shuttlecontrol frontend doesn't put 'host' header
+            dbg(s"stomp connection: $headers over $conn")
+            //required( conn, message, headers, "accept-version", "host" )// todo: shuttlecontrol frontend doesn't put 'host' header
             required( conn, message, headers, "accept-version" )
 
             def heartBeat( a: js.Any ) = {
@@ -259,6 +261,21 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
     }, CONNECTION_LINGERING_DELAY )
   }
 
+  def parseMessage( message: String, conn: Connection ) = {
+    dbg( s"parseMessage: ${escape(message)}, $conn" )
+
+    val List(_, command, headers, body ) = stompMessageRegex.exec( message ).toList
+    val headerMap = HeaderRegex findAllMatchIn headers.toString map (m => unescape( m.group(1) ) -> unescape( m.group(2) )) toMap
+
+    (command.toString, headerMap, body.toString)
+  }
+
+  private def unescape( s: String ) = s.
+    replace( "\\r", "\r" ).
+    replace( "\\n", "\n" ).
+    replace( "\\c", ":" ).
+    replace( "\\\\", "\\" )
+
   def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
     val errorHeaders =
       List(
@@ -290,27 +307,5 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
             body )
         }
     }
-
-  object parseMessage extends {
-
-    private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
-    private val HeaderRegex = """([a-zA-Z0-9-\\]+):(.+)"""r
-
-    def apply( message: String ) = {
-      dbg( s"parseMessage: ${escape(message)}" )
-
-      val List(_, command, headers, body ) = stompMessageRegex.exec( message ).toList
-      val headerMap = HeaderRegex findAllMatchIn headers.toString map (m => unescape( m.group(1) ) -> unescape( m.group(2) )) toMap
-
-      (command.toString, headerMap, body.toString)
-    }
-
-    private def unescape( s: String ) = s.
-      replace( "\\r", "\r" ).
-      replace( "\\n", "\n" ).
-      replace( "\\c", ":" ).
-      replace( "\\\\", "\\" )
-
-  }
 
 }

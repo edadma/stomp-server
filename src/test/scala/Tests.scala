@@ -4,11 +4,10 @@ import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import typings.sockjsDashClient.sockjsDashClientMod
 import typings.stompjs.stompjsMod
-import typings.stompjs.stompjsMod.{Frame, Message}
+import typings.stompjs.stompjsMod.Message
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Promise
 import scala.scalajs.js
-import scala.util.{Success, Try}
 
 
 object Tests {
