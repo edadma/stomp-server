@@ -12,6 +12,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.scalajs.js
 import scala.scalajs.js.RegExp
+import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 
 
 object StompServer {
@@ -23,15 +24,14 @@ object StompServer {
 
 }
 
+@JSExportTopLevel("StompServer")
 class StompServer( name: String, hostname: String, port: Int, path: String, authorized: Map[String, String] => Boolean, debug: Boolean = false ) {
 
   import StompServer._
 
   case class Subscriber( client: String, subscriptionId: String )
   case class Subscription( queue: String, ack: String )
-
   case class StompConnection( conn: Connection, sendBeats: Int, receiveBeats: Int, var lastReceived: Long, timer: Timeout )
-
   case class Message( queue: String, body: String, contentType: String )
 
   private val sockjs_echo = sockjs.sockjsMod.createServer()
@@ -284,7 +284,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
     }, CONNECTION_LINGERING_DELAY )
   }
 
-  def parseMessage( message: String, conn: Connection ) = {
+  private def parseMessage( message: String, conn: Connection ) = {
     dbg( s"parseMessage: ${escape(message)}, $conn" )
 
     val List(_, command, headers, body ) = stompMessageRegex.exec( message ).toList
@@ -299,7 +299,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
     replace( "\\c", ":" ).
     replace( "\\\\", "\\" )
 
-  def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
+  private def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
     val errorHeaders =
       List(
         "content-type" -> "text/plain",
@@ -314,6 +314,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
     disconnect( conn )
   }
 
+  @JSExport
   def send( queue: String, body: String, contentType: String = "text/plain" ): Unit =
     queues get queue match {
       case None =>

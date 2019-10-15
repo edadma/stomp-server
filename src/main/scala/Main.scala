@@ -10,7 +10,6 @@ import scala.scalajs.js
 import scala.scalajs.js.JSON
 
 
-
 object Main extends App {
 
   def authorize( headers: Map[String, String] ) = {

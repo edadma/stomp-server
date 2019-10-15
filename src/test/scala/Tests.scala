@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import typings.sockjsDashClient.sockjsDashClientMod
 import typings.stompjs.stompjsMod
-import typings.stompjs.stompjsMod.Message
+import typings.stompjs.stompjsMod.{Frame, Message}
 
 import scala.concurrent.Promise
 import scala.scalajs.js
@@ -24,46 +24,28 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
   implicit override def executionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", _ => true, true )
 
-//	"connection" in {
-//    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
-//    val p = Promise[Assertion]
-//
-//    client.connect( js.Dynamic.literal(Authorization = "Bearer asdf"), frame => {
-//      p success (frame.asInstanceOf[Frame].command shouldBe "CONNECTED")
-//    } )
-//
-//    p.future
-//	}
-//
-//  "subscription" in {
-//    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
-//    val p = Promise[Assertion]
-//
-//    client.connect( js.Dynamic.literal(), frame => {
-//      if (frame.asInstanceOf[Frame].command == "CONNECTED") {
-//        client.subscribe("data", (message: Message) => {
-//          p success (message.command shouldBe "MESSAGE")
-//        }, js.Dynamic.literal())
-//        client.send( "data" )
-//      }
-//    } )
-//
-//    p.future
-//  }
-
-  "send" in {
-    val client1 = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
-    val client2 = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
+	"connection" in {
+    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
     val p = Promise[Assertion]
 
-    client1.connect( js.Dynamic.literal(), frame => {
-      println(frame)
-      client2.connect( js.Dynamic.literal(), frame => {
-        client2.subscribe("data", (message: Message) => {
+    client.connect( js.Dynamic.literal(Authorization = "Bearer asdf"), frame => {
+      p success (frame.asInstanceOf[Frame].command shouldBe "CONNECTED")
+    } )
+
+    p.future
+	}
+
+  "subscription" in {
+    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
+    val p = Promise[Assertion]
+
+    client.connect( js.Dynamic.literal(), frame => {
+      if (frame.asInstanceOf[Frame].command == "CONNECTED") {
+        client.subscribe("data", (message: Message) => {
           p success (message.command shouldBe "MESSAGE")
         }, js.Dynamic.literal())
-        client1.send( "data" )
-      } )
+        client.send( "data" )
+      }
     } )
 
     p.future
