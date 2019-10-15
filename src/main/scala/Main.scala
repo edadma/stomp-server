@@ -37,7 +37,7 @@ object Main extends App {
 object StompServer {
 
   private val DEFAULT_CONTENT_TYPE = "text/plain"
-  private val CONNECTION_LINGERING_DELAY = 200
+  private val CONNECTION_LINGERING_DELAY = 1000
 
 }
 
@@ -45,10 +45,8 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
   import StompServer._
 
-  case class Subscriber( client: Client, subscriptionId: String )
+  case class Subscriber( client: String, subscriptionId: String )
   case class Subscription( queue: String, ack: String )
-
-  case class Client( removeAddress: String, remotePort: Double )
 
   case class StompConnection( conn: Connection, beats: Int, timer: Timeout )
 
@@ -56,13 +54,11 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
   private val sockjs_echo = sockjs.sockjsMod.createServer()
   private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
-  private val connections = new mutable.HashMap[Client, StompConnection]
+  private val connections = new mutable.HashMap[String, StompConnection]
   private val queues = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
   private val transactions = new mutable.HashMap[String, ListBuffer[Message]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
-    val connectionKey = Client( conn.remoteAddress, conn.remotePort )//(conn.remoteAddress, conn.remotePort)
-
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}" )
 
     conn.on( "data", listener = (message: String) => {
@@ -84,7 +80,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
               val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
               val timer = setInterval( heartBeat, beats )
 
-              connections(connectionKey) = StompConnection(conn, beats, timer)
+              connections(conn.id) = StompConnection(conn, beats, timer)
 
               dbg( s"send heart beats every $beats millisends" )
               sendMessage( conn, "CONNECTED",
@@ -101,7 +97,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
             dbg( s"subscribe: $headers" )
             required( conn, message, headers, "destination", "id" )
 
-            val subscriber = Subscriber(connectionKey, headers("id"))
+            val subscriber = Subscriber(conn.id, headers("id"))
 
             if (subscriptions contains subscriber) {
               dbg(s"*** duplicate subscription: $subscriber")
@@ -126,7 +122,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
             dbg( s"unsubscribe: $headers")
             required( conn, message, headers, "id" )
 
-            val subscriber = Subscriber( connectionKey, headers("id") )
+            val subscriber = Subscriber( conn.id, headers("id") )
 
             subscriptions get subscriber match {
               case Some(Subscription(queue, _)) =>
@@ -145,7 +141,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
             receipt( conn, headers )
           case ("DISCONNECT", headers, _) =>
-            dbg( s"disconnect: $headers, $connectionKey" )
+            dbg( s"disconnect: $headers, $conn" )
             receipt( conn, headers )
             disconnect( conn )
           case ("SEND", headers, body) =>
@@ -229,7 +225,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
     dbg( s"sending message '${escape(message)}' to $conn" )
     conn.write( message )
-    connections(Client(conn.remoteAddress, conn.remotePort)).timer.refresh
+    connections(conn.id).timer.refresh
   }
 
   private def createSession = {
@@ -277,8 +273,10 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
   }
 
   private def disconnect( conn: Connection ) = {
-    clearInterval( connections(Client(conn.remoteAddress, conn.remotePort)).timer )
-    setTimeout( _ => conn.close, CONNECTION_LINGERING_DELAY )
+    setTimeout( _ => {
+      conn.close
+      clearInterval( connections(conn.id).timer )
+    }, CONNECTION_LINGERING_DELAY )
   }
 
   def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
