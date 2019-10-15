@@ -1,6 +1,6 @@
 import * as StompServer from '../target/scala-2.12/scalajs-bundler/main/stomp-server-fastopt.js'
 import * as StompJS from 'stompjs'
-import * as SockJS from 'sockjs'
+import SockJS from 'sockjs-client'
 
 const authorize = () => {return true}
 
