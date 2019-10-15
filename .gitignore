@@ -18,3 +18,5 @@ build/
 *~
 .directory
 .idea/
+
+test-client/dist/

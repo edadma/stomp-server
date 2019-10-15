@@ -1,6 +1,6 @@
 import * as StompServer from '../target/scala-2.12/scalajs-bundler/main/stomp-server-fastopt.js'
 import * as StompJS from 'stompjs'
-import * as SockJS from 'sockjs-client'
+import * as SockJS from 'sockjs'
 
 const authorize = () => {return true}
 
@@ -21,7 +21,7 @@ client.connect(
             message => {
                 console.log( 'message', message )
             },
-            { Authorization: 'Bearer anything' }
-        )
+            { Authorization: 'Bearer anything' } )
+        stomp.send( )
     }
 )
