@@ -7,6 +7,8 @@ import typings.stompjs.stompjsMod.{Client, Message}
 
 import scala.concurrent.Promise
 import scala.scalajs.js
+import scala.scalajs.js.JSON
+
 
 
 object Main extends App {
@@ -15,7 +17,10 @@ object Main extends App {
     true
   }
 
-  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", authorize, true )
+  val serverHostname = "0.0.0.0"
+  val serverPort = 15674
+  val serverPath = "/stomp"
+  val server = new StompServer( "ShuttleControl/1.0", serverHostname, serverPort, serverPath, authorize, true )
 
 //  println( "type message" )
 //
@@ -27,33 +32,10 @@ object Main extends App {
 //      server.send( "data", body.toString )
 //    } )
 
-  val serverHostname = "0.0.0.0"
-  val serverPort = 15674
-  var client1: Client = null
-  var client2: Client = null
+  val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort$serverPath") )
 
-//  setTimeout(
-//    _ => {
-      client1 = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
-      println( js.Object.keys(client1) )
-//      setTimeout(
-//        _ => {
-          client2 = stompjsMod.over(new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp"))
-
-          setTimeout(
-            _ => {
-              println( js.Object.keys(client1) )
-              client1.connect(js.Dynamic.literal(), frame => {
-                println(frame)
-                client2.connect(js.Dynamic.literal(), frame => {
-                  client2.subscribe("data", (message: Message) => {
-                    println(message)
-                  }, js.Dynamic.literal())
-                  client1.send("data")
-                })
-              })
-            }, 500 )
-//        }, 500 )
-//    }, 500 )
+  client.connect(js.Dynamic.literal(), frame => {
+    println( "connected" )
+  } )
 
 }

@@ -30,7 +30,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
   case class Subscriber( client: String, subscriptionId: String )
   case class Subscription( queue: String, ack: String )
 
-  case class StompConnection( conn: Connection, beats: Int, timer: Timeout )
+  case class StompConnection( conn: Connection, sendBeats: Int, receiveBeats: Int, var lastReceived: Long, timer: Timeout )
 
   case class Message( queue: String, body: String, contentType: String )
 
@@ -45,26 +45,49 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
     conn.on( "data", listener = (message: String) => {
       if (message == "\n" || message == "\r\n") {
-        dbg(s"heart beat received")
+        dbg( s"heart beat received from ${conn.remoteAddress}:${conn.remotePort}/$conn" )
+        connections(conn.id).lastReceived = System.currentTimeMillis
       } else
         parseMessage( message, conn ) match {
           case ("CONNECT"|"STOMP", headers, _) =>
-            dbg(s"stomp connection: $headers over $conn")
+            dbg( s"stomp connection: $headers over $conn" )
             //required( conn, message, headers, "accept-version", "host" )// todo: shuttlecontrol frontend doesn't put 'host' header
             required( conn, message, headers, "accept-version" )
 
             def heartBeat( a: js.Any ) = {
               conn.write( "\n" )
-              dbg( "send heart beat" )
+              dbg( s"heart beat sent to ${conn.remoteAddress}:${conn.remotePort}/$conn" )
+
+              connections(conn.id) match {
+                case StompConnection(_, _, 0, _, _) =>
+                case StompConnection(_, _, receiveBeats, lastReceived, _) =>
+                  val time = System.currentTimeMillis
+
+                  if (time - lastReceived > receiveBeats + 100) {
+                    val id = conn.id
+
+                    dbg( s"dead connection: ${conn.remoteAddress}:${conn.remotePort}/$conn" )
+                    clearInterval( connections(id).timer )
+                    conn.close
+                    connections -= id
+                  }
+              }
             }
 
             if (authorized( headers )) {
-              val beats = headers.getOrElse("heart-beat", "0,0").split(",")(1).toInt
-              val timer = setInterval( heartBeat, beats )
+              val Array(cx, cy) = headers.getOrElse("heart-beat", "0,0") split "," map (_.toInt)
+              val send = cy min 10000
+              val rec = cx min 10000
 
-              connections(conn.id) = StompConnection(conn, beats, timer)
+              connections(conn.id) =
+                if (send == 0) {
+                  dbg( s"send heart beats never" )
+                  StompConnection( conn, 0, rec, System.currentTimeMillis, null )
+                } else {
+                  dbg( s"send heart beats every $send millisends" )
+                  StompConnection( conn, send, rec, System.currentTimeMillis, setInterval(heartBeat, send) )
+                }
 
-              dbg( s"send heart beats every $beats millisends" )
               sendMessage( conn, "CONNECTED",
                 List(
                   "version" -> "1.2",
