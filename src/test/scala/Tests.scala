@@ -45,7 +45,6 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
     client.connect( js.Dynamic.literal(Authorization = "Bearer asdf"), frame => {
       if (frame.asInstanceOf[Frame].command == "CONNECTED") {
         client.subscribe("data", (message: Message) => {
-          println( message )
           p success (message.command shouldBe "MESSAGE")
         }, js.Dynamic.literal(Authorization = "Bearer asdf"))
         client.send( "data" )
