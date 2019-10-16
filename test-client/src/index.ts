@@ -21,6 +21,11 @@ client.connect(
                 console.log( 'message', message )
             },
             { Authorization: 'Bearer anything' } )
-        stomp.send( 'data', 'this is a message', 'text/plain' )
     }
 )
+
+setTimeout( () => {
+    console.log( stomp.listQueues() )
+    console.log( 'sending test message' )
+    stomp.send( 'data', 'this is a message', 'text/plain' )
+}, 200 )

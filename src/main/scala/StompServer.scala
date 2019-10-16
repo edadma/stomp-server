@@ -11,9 +11,9 @@ import typings.uuid.uuidMod
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.scalajs.js
-import scala.scalajs.js.RegExp
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
-
+import js.RegExp
+import js.annotation.{JSExport, JSExportTopLevel}
+import js.JSConverters._
 
 object StompServer {
 
@@ -331,5 +331,8 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
             body )
         }
     }
+
+  @JSExport
+  def listQueues() = queues.keysIterator.toJSArray.sorted
 
 }
