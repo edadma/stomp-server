@@ -3,9 +3,12 @@ const StompServer = require( '../stomp-server' ).StompServer
 import * as StompJS from 'stompjs'
 import SockJS from 'sockjs-client'
 
-const authorize = (headers: any) => {return true}
+const authorize = (headers: any) => {
+	console.log( headers )
+	return true
+}
 
-const stomp = new StompServer( 'Test Server/0.1', '0.0.0.0', 15674, '/stomp', authorize, true )
+const stomp = new StompServer( 'Test Server/0.1', '0.0.0.0', 15674, '/stomp', authorize, authorize, true )
 
 const socket = new SockJS( 'http://127.0.0.1:15674/stomp' )
 const client = StompJS.over( socket )
@@ -25,7 +28,7 @@ client.connect(
 )
 
 setTimeout( () => {
-    console.log( stomp.listQueues() )
+    console.log( stomp.queues() )
     console.log( 'sending test message' )
     stomp.send( 'data', 'this is a message', 'text/plain' )
 }, 200 )

@@ -25,7 +25,8 @@ object StompServer {
 }
 
 @JSExportTopLevel("StompServer")
-class StompServer( name: String, hostname: String, port: Int, path: String, authorized: js.Function1[Map[String, String], Boolean], debug: Boolean = false ) {
+class StompServer( name: String, hostname: String, port: Int, path: String, connectAuthorize: js.Function1[js.Dictionary[String], Boolean],
+                   subscribeAuthorize: js.Function1[js.Dictionary[String], Boolean], debug: Boolean = false ) {
 
   import StompServer._
 
@@ -37,7 +38,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
   private val sockjs_echo = sockjs.sockjsMod.createServer()
   private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
   private val connections = new mutable.HashMap[String, StompConnection]
-  private val queues = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
+  private val queueMap = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
   private val transactions = new mutable.HashMap[String, ListBuffer[Message]]
 
   sockjs_echo.on_connection( sockjsStrings.connection, conn => {
@@ -74,7 +75,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
               }
             }
 
-            if (authorized( headers )) {
+            if (connectAuthorize( headers.toJSDictionary )) {
               val Array(cx, cy) = headers.getOrElse("heart-beat", "0,0") split "," map (_.toInt)
               val send = cy min 10000
               val rec = cx min 10000
@@ -95,33 +96,38 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
                   "session" -> createSession,
                   "server" -> name) )
             } else {
-              dbg( s"*** not authorized" )
+              dbg( s"*** not authorized to connect" )
               error( conn, headers, "not authorized" )
             }
           case ("SUBSCRIBE", headers, _) =>
-            dbg( s"subscribe: $headers" )
+            dbg( s"subscribe: $headers, $conn" )
             required( conn, message, headers, "destination", "id" )
 
-            val subscriber = Subscriber(conn.id, headers("id"))
+            if (subscribeAuthorize( headers.toJSDictionary )) {
+              val subscriber = Subscriber(conn.id, headers("id"))
 
-            if (subscriptions contains subscriber) {
-              dbg(s"*** duplicate subscription: $subscriber")
-              error( conn, headers, "duplicate subscription" )
+              if (subscriptions contains subscriber) {
+                dbg(s"*** duplicate subscription: $subscriber")
+                error( conn, headers, "duplicate subscription" )
+              } else {
+                val queue = headers("destination")
+
+                subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
+
+                val subscribers =
+                  queueMap get queue match {
+                    case None =>
+                      dbg(s"created queue '$queue' for $subscriber")
+                      mutable.HashSet[Subscriber]( subscriber )
+                    case Some(subs) => subs += subscriber
+                  }
+
+                queueMap(queue) = subscribers
+                receipt( conn, headers )
+              }
             } else {
-              val queue = headers("destination")
-
-              subscriptions(subscriber) = Subscription( headers("destination"), headers.getOrElse("ack", "auto") )
-
-              val subscribers =
-                queues get queue match {
-                  case None =>
-                    dbg(s"created queue '$queue' for $subscriber")
-                    mutable.HashSet[Subscriber]( subscriber )
-                  case Some(subs) => subs += subscriber
-                }
-
-              queues(queue) = subscribers
-              receipt( conn, headers )
+              dbg( s"*** not authorized to subscribe" )
+              error( conn, headers, "not authorized" )
             }
           case ("UNSUBSCRIBE", headers, _) =>
             dbg( s"unsubscribe: $headers")
@@ -133,12 +139,12 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
               case Some(Subscription(queue, _)) =>
                 subscriptions -= subscriber
 
-                val set = queues(queue)
+                val set = queueMap(queue)
 
                 set -= subscriber
 
                 if (set isEmpty)
-                  queues -= queue
+                  queueMap -= queue
               case None =>
                 dbg( s"*** subscription not found: $subscriber" )
                 error( conn, headers, "subscription not found" )
@@ -316,7 +322,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
 
   @JSExport
   def send( queue: String, body: String, contentType: String = "text/plain" ): Unit =
-    queues get queue match {
+    queueMap get queue match {
       case None =>
       case Some( subs ) =>
         for (Subscriber(client, subscriptionId) <- subs) {
@@ -333,6 +339,6 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
     }
 
   @JSExport
-  def listQueues() = queues.keysIterator.toJSArray.sorted
+  def queues() = queueMap.keysIterator.toJSArray.sorted
 
 }

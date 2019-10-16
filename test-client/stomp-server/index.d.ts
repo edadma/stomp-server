@@ -6,6 +6,6 @@ declare class StompServer {
 
     send( queue: string, body: string, contentType: string ): void;
 
-    listQueues(): string[]
+    queues(): string[]
 
 }
