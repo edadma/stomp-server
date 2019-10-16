@@ -84,7 +84,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, auth
                   dbg( s"send heart beats never" )
                   StompConnection( conn, 0, rec, System.currentTimeMillis, null )
                 } else {
-                  dbg( s"send heart beats every $send millisends" )
+                  dbg( s"send heart beats every $send milliseconds" )
                   StompConnection( conn, send, rec, System.currentTimeMillis, setInterval(heartBeat, send) )
                 }
 
