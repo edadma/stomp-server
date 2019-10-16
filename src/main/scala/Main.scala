@@ -1,9 +1,9 @@
 package xyz.hyperreal.stomp_server
 
 import typings.node.{nodeStrings, process, setTimeout}
-import typings.sockjsDashClient.sockjsDashClientMod
-import typings.stompjs.stompjsMod
-import typings.stompjs.stompjsMod.{Client, Message}
+//import typings.sockjsDashClient.sockjsDashClientMod
+//import typings.stompjs.stompjsMod
+//import typings.stompjs.stompjsMod.{Client, Message}
 
 import scala.concurrent.Promise
 import scala.scalajs.js
