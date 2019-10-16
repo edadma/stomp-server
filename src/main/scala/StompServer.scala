@@ -25,7 +25,7 @@ object StompServer {
 }
 
 @JSExportTopLevel("StompServer")
-class StompServer( name: String, hostname: String, port: Int, path: String, authorized: Map[String, String] => Boolean, debug: Boolean = false ) {
+class StompServer( name: String, hostname: String, port: Int, path: String, authorized: js.Function1[Map[String, String], Boolean], debug: Boolean = false ) {
 
   import StompServer._
 

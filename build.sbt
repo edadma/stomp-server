@@ -4,7 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.12.10"
 
-scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials" )
+scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials",
+  "-P:scalajs:sjsDefinedByDefault" )
 
 organization := "xyz.hyperreal"
 
