@@ -9,7 +9,7 @@ export class StompServer {
     debug: boolean
   )
 
-  send(queue: string, body: string, contentType: string): void
+  send(queue: string, body: string, contentType?: string): void
 
   queues(): string[]
 }

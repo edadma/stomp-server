@@ -236,7 +236,11 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
     dbg( s"sending message '${escape(message)}' to $conn" )
     conn.write( message )
-    connections(conn.id).timer.refresh
+
+    connections get conn.id match {
+      case None =>
+      case Some( c ) => c.timer.refresh
+    }
   }
 
   private def createSession = {
@@ -285,8 +289,12 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
   private def disconnect( conn: Connection ) = {
     setTimeout( _ => {
+      connections get conn.id match {
+        case None =>
+        case Some( c ) => clearInterval( c.timer )
+      }
+
       conn.close
-      clearInterval( connections(conn.id).timer )
     }, CONNECTION_LINGERING_DELAY )
   }
 

@@ -1,6 +1,6 @@
 name := "stomp-server"
 
-version := "0.1.3"
+version := "0.1.7"
 
 scalaVersion := "2.12.10"
 

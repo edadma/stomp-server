@@ -1,4 +1,4 @@
-import { StompServer } from './stomp-server'
+import { StompServer } from '../../stomp-server'
 import * as StompJS from 'stompjs'
 import SockJS from 'sockjs-client'
 
@@ -29,5 +29,5 @@ client.connect(
 setTimeout( () => {
     console.log( stomp.queues() )
     console.log( 'sending test message' )
-    stomp.send( 'data', 'this is a message', 'text/plain' )
+    stomp.send( 'data', 'this is a message' )
 }, 200 )

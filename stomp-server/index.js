@@ -1942,7 +1942,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$unds
                 result$2 = new $c_sci_$colon$colon().init___O__sci_List(x, this$40);
                 i$1 = (((-1) + i$1) | 0)
               };
-              return $this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__Ltypings_node_NodeJS_Timeout(conn$1, "CONNECTED", result$2, "")
+              return $this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(conn$1, "CONNECTED", result$2, "")
             } else {
               $this.dbg__p1__T__V("*** not authorized to connect");
               $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers, "not authorized", "");
@@ -2201,54 +2201,6 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$unds
     })
   })(this, conn))
 });
-$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__Ltypings_node_NodeJS_Timeout = (function(conn, command, headers, body) {
-  var f = (function($this) {
-    return (function(x0$1$2) {
-      var x0$1 = $as_T2(x0$1$2);
-      if ((x0$1 !== null)) {
-        var k = $as_T(x0$1.$$und1__O());
-        var v = $as_T(x0$1.$$und2__O());
-        return (($this.escape__p1__T__T(k) + ":") + $this.escape__p1__T__T(v))
-      } else {
-        throw new $c_s_MatchError().init___O(x0$1)
-      }
-    })
-  })(this);
-  var this$1 = $m_sci_List$();
-  var bf = this$1.ReusableCBFInstance$2;
-  if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((headers === $m_sci_Nil$())) {
-      var jsx$1 = $m_sci_Nil$()
-    } else {
-      var arg1 = headers.head__O();
-      var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1), $m_sci_Nil$());
-      var t = h;
-      var rest = $as_sci_List(headers.tail__O());
-      while ((rest !== $m_sci_Nil$())) {
-        var arg1$1 = rest.head__O();
-        var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$1), $m_sci_Nil$());
-        t.tl$5 = nx;
-        t = nx;
-        rest = $as_sci_List(rest.tail__O())
-      };
-      var jsx$1 = h
-    }
-  } else {
-    var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(headers, bf);
-    var these = headers;
-    while ((!these.isEmpty__Z())) {
-      var arg1$2 = these.head__O();
-      b.$$plus$eq__O__scm_Builder(f(arg1$2));
-      these = $as_sci_List(these.tail__O())
-    };
-    var jsx$1 = b.result__O()
-  };
-  var escapedHeaders = $as_sc_TraversableOnce(jsx$1).mkString__T__T("\n");
-  var message = (((((command + "\n") + escapedHeaders) + "\n\n") + body) + "\u0000");
-  this.dbg__p1__T__V(((("sending message '" + this.escape__p1__T__T(message)) + "' to ") + conn));
-  conn.write(message);
-  return $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this.connections$1.apply__O__O($as_T(conn.id))).timer$1.refresh()
-});
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.escape__p1__T__T = (function(s) {
   var thiz = $as_T(s.split("\\").join("\\\\"));
   var thiz$1 = $as_T(thiz.split("\r").join("\\r"));
@@ -2367,7 +2319,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.error__p1__Ltypings_sock
   };
   var this$20 = $m_sci_List$();
   var errorHeaders = $as_sci_List(jsx$3.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$1, this$20.ReusableCBFInstance$2));
-  this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__Ltypings_node_NodeJS_Timeout(conn, "ERROR", errorHeaders, body);
+  this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(conn, "ERROR", errorHeaders, body);
   this.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__Ltypings_node_NodeJS_Timeout(conn)
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (function(queue, body, contentType) {
@@ -2411,7 +2363,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (func
               result = new $c_sci_$colon$colon().init___O__sci_List(x$1, this$19);
               i = (((-1) + i) | 0)
             };
-            return this$2.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__Ltypings_node_NodeJS_Timeout(jsx$6, "MESSAGE", result, body$1)
+            return this$2.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(jsx$6, "MESSAGE", result, body$1)
           } else {
             throw new $c_s_MatchError().init___O(x$6)
           }
@@ -2432,8 +2384,18 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.$$js$exported$meth$queue
   return this.queues__sjs_js_Array()
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$disconnect$1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__V = (function(x$4, conn$2) {
-  conn$2.close();
-  (0, $g.clearInterval)($as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this.connections$1.apply__O__O($as_T(conn$2.id))).timer$1)
+  var x1 = this.connections$1.get__O__s_Option($as_T(conn$2.id));
+  var x = $m_s_None$();
+  if ((!(x === x1))) {
+    if ((x1 instanceof $c_s_Some)) {
+      var x2 = $as_s_Some(x1);
+      var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
+      (0, $g.clearInterval)(c.timer$1)
+    } else {
+      throw new $c_s_MatchError().init___O(x1)
+    }
+  };
+  conn$2.close()
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.$$js$exported$meth$send__T__T__T__O = (function(queue, body, contentType) {
   this.send__T__T__T__V(queue, body, contentType)
@@ -2456,7 +2418,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.receipt__p1__Ltypings_so
         result = new $c_sci_$colon$colon().init___O__sci_List(x$1, this$6);
         i = (((-1) + i) | 0)
       };
-      this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__Ltypings_node_NodeJS_Timeout(conn, "RECEIPT", result, "")
+      this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(conn, "RECEIPT", result, "")
     } else {
       throw new $c_s_MatchError().init___O(x1)
     }
@@ -2476,6 +2438,64 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.addToTransaction__p1__T_
       return $m_Lxyz_hyperreal_stomp$undserver_StompServer$().xyz$hyperreal$stomp$undserver$StompServer$$DEFAULT$undCONTENT$undTYPE$1
     })
   })(this))))))
+});
+$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O = (function(conn, command, headers, body) {
+  var f = (function($this) {
+    return (function(x0$1$2) {
+      var x0$1 = $as_T2(x0$1$2);
+      if ((x0$1 !== null)) {
+        var k = $as_T(x0$1.$$und1__O());
+        var v = $as_T(x0$1.$$und2__O());
+        return (($this.escape__p1__T__T(k) + ":") + $this.escape__p1__T__T(v))
+      } else {
+        throw new $c_s_MatchError().init___O(x0$1)
+      }
+    })
+  })(this);
+  var this$1 = $m_sci_List$();
+  var bf = this$1.ReusableCBFInstance$2;
+  if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
+    if ((headers === $m_sci_Nil$())) {
+      var jsx$1 = $m_sci_Nil$()
+    } else {
+      var arg1 = headers.head__O();
+      var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1), $m_sci_Nil$());
+      var t = h;
+      var rest = $as_sci_List(headers.tail__O());
+      while ((rest !== $m_sci_Nil$())) {
+        var arg1$1 = rest.head__O();
+        var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$1), $m_sci_Nil$());
+        t.tl$5 = nx;
+        t = nx;
+        rest = $as_sci_List(rest.tail__O())
+      };
+      var jsx$1 = h
+    }
+  } else {
+    var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(headers, bf);
+    var these = headers;
+    while ((!these.isEmpty__Z())) {
+      var arg1$2 = these.head__O();
+      b.$$plus$eq__O__scm_Builder(f(arg1$2));
+      these = $as_sci_List(these.tail__O())
+    };
+    var jsx$1 = b.result__O()
+  };
+  var escapedHeaders = $as_sc_TraversableOnce(jsx$1).mkString__T__T("\n");
+  var message = (((((command + "\n") + escapedHeaders) + "\n\n") + body) + "\u0000");
+  this.dbg__p1__T__V(((("sending message '" + this.escape__p1__T__T(message)) + "' to ") + conn));
+  conn.write(message);
+  var x1 = this.connections$1.get__O__s_Option($as_T(conn.id));
+  var x = $m_s_None$();
+  if ((x === x1)) {
+    return (void 0)
+  } else if ((x1 instanceof $c_s_Some)) {
+    var x2 = $as_s_Some(x1);
+    var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
+    return c.timer$1.refresh()
+  } else {
+    throw new $c_s_MatchError().init___O(x1)
+  }
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$new$10__sjs_js_Any__V = (function(reqres) {
   this.dbg__p1__T__V("upgrade");
