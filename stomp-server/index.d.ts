@@ -1,11 +1,15 @@
-export = StompServer;
+export class StompServer {
+  constructor(
+    name: string,
+    hostname: string,
+    port: number,
+    path: string,
+    connectAuthorize: (headers: any) => boolean,
+    subscribeAuthorize: (headers: any) => boolean,
+    debug: boolean
+  )
 
-declare class StompServer {
+  send(queue: string, body: string, contentType: string): void
 
-    constructor( name: string, hostname: string, port: number, path: string, authorized: (headers: any) => boolean, debug: boolean );
-
-    send( queue: string, body: string, contentType: string ): void;
-
-    queues(): string[]
-
+  queues(): string[]
 }

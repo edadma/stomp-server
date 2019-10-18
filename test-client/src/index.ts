@@ -1,5 +1,4 @@
-//import StompServer from '../../stomp-server'
-const StompServer = require( '../../stomp-server' ).StompServer
+import { StompServer } from './stomp-server'
 import * as StompJS from 'stompjs'
 import SockJS from 'sockjs-client'
 
