@@ -1,6 +1,6 @@
 {
   "name": "stomp-server",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "STOMP server",
   "main": "index.js",
   "scripts": {

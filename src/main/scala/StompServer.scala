@@ -19,7 +19,7 @@ object StompServer {
 
   private val DEFAULT_CONTENT_TYPE = "text/plain"
   private val CONNECTION_LINGERING_DELAY = 1000
-  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
+  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n?(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
   private val HeaderRegex = """([a-zA-Z0-9-\\]+):(.+)"""r
 
 }

@@ -12,30 +12,17 @@ import scala.scalajs.js.JSON
 
 object Main extends App {
 
-//  def authorize( headers: Map[String, String] ) = {
-//    println( "it's here" )
-//    true
-//  }
+//  def authorize( headers: js.Dictionary[String] ) = true
 //
 //  val serverHostname = "0.0.0.0"
 //  val serverPort = 15674
 //  val serverPath = "/stomp"
-//  val server = new StompServer( "ShuttleControl/1.0", serverHostname, serverPort, serverPath, authorize, true )
-//
-////  println( "type message" )
-////
-////  process.stdin.setEncoding( "utf-8" )
-////
-////  process.stdin.on_data( nodeStrings.data,
-////    body => {
-////      println( "sending..." )
-////      server.send( "data", body.toString )
-////    } )
+//  val server = new StompServer( "ShuttleControl/1.0", serverHostname, serverPort, serverPath, authorize, authorize, true )
 //
 //  val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort$serverPath") )
 //
 //  client.connect(js.Dynamic.literal(), frame => {
-//    println( "connected" )
+//    client.disconnect( () => {} )
 //  } )
 
 }

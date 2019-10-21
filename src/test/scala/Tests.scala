@@ -22,9 +22,9 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
   import Tests._
 
   implicit override def executionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", _ => true, true )
+  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", _ => true, _ => true, false )
 
-	"connection" in {
+	"connect" in {
     val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
     val p = Promise[Assertion]
 
@@ -35,7 +35,7 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
     p.future
 	}
 
-  "subscription" in {
+  "subscribe" in {
     val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
     val p = Promise[Assertion]
 
@@ -46,6 +46,17 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
         }, js.Dynamic.literal())
         client.send( "data" )
       }
+    } )
+
+    p.future
+  }
+
+  "disconnect" in {
+    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
+    val p = Promise[Assertion]
+
+    client.connect( js.Dynamic.literal(Authorization = "Bearer asdf"), frame => {
+      client.disconnect( () => {p success (assert(true))} )
     } )
 
     p.future
