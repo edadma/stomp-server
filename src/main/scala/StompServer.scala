@@ -11,7 +11,6 @@ import typings.uuid.uuidMod
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.scalajs.js
-import js.RegExp
 import js.annotation.{JSExport, JSExportTopLevel}
 import js.JSConverters._
 
@@ -19,8 +18,6 @@ object StompServer {
 
   private val DEFAULT_CONTENT_TYPE = "text/plain"
   private val CONNECTION_LINGERING_DELAY = 1000
-  private val stompMessageRegex = RegExp( """([A-Z]+)\r?\n?(.*?)\r?\n\r?\n([^\00]*)\00(?:\r?\n)*""", "s" )
-  private val HeaderRegex = """([a-zA-Z0-9-\\]+):(.+)"""r
 
 }
 
@@ -35,22 +32,25 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   case class StompConnection( conn: Connection, sendBeats: Int, receiveBeats: Int, var lastReceived: Long, timer: Timeout )
   case class Message( queue: String, body: String, contentType: String )
 
-  private val sockjs_echo = sockjs.sockjsMod.createServer()
+  private val sock = sockjs.sockjsMod.createServer()
   private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
   private val connections = new mutable.HashMap[String, StompConnection]
   private val queueMap = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
   private val transactions = new mutable.HashMap[String, ListBuffer[Message]]
 
-  sockjs_echo.on_connection( sockjsStrings.connection, conn => {
+  sock.on_connection( sockjsStrings.connection, conn => {
     dbg( s"sockjs connection: ${conn.remoteAddress}, ${conn.remotePort}, ${conn.url}, $conn" )
 
     conn.on( "data", listener = (message: String) => {
       if (message == "\n" || message == "\r\n") {
         dbg( s"heart beat received from ${conn.remoteAddress}:${conn.remotePort}/$conn" )
         connections(conn.id).lastReceived = System.currentTimeMillis
-      } else
-        parseMessage( message, conn ) match {
-          case ("CONNECT"|"STOMP", headers, _) =>
+      } else {
+        dbg( s"parse message: ${escape(message)}, $conn" )
+
+        parseMessage( message ) match {
+          case None => error( conn, Map(), "couldn't parse message" )
+          case Some( ("CONNECT"|"STOMP", headers, _) ) =>
             dbg( s"stomp connection: $headers over $conn" )
             //required( conn, message, headers, "accept-version", "host" )// todo: shuttlecontrol frontend doesn't put 'host' header
             required( conn, message, headers, "accept-version" )
@@ -61,14 +61,17 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
               connections(conn.id) match {
                 case StompConnection(_, _, 0, _, _) =>
-                case StompConnection(_, _, receiveBeats, lastReceived, _) =>
+                case StompConnection(_, _, receiveBeats, lastReceived, timer) =>
                   val time = System.currentTimeMillis
 
                   if (time - lastReceived > receiveBeats + 100) {
                     val id = conn.id
 
                     dbg( s"dead connection: ${conn.remoteAddress}:${conn.remotePort}/$conn" )
-                    clearInterval( connections(id).timer )
+
+                    if (timer ne null)
+                      clearInterval( timer )
+
                     conn.close
                     connections -= id
                   }
@@ -99,7 +102,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
               dbg( s"*** not authorized to connect" )
               error( conn, headers, "not authorized" )
             }
-          case ("SUBSCRIBE", headers, _) =>
+          case Some( ("SUBSCRIBE", headers, _) ) =>
             dbg( s"subscribe: $headers, $conn" )
             required( conn, message, headers, "destination", "id" )
 
@@ -129,7 +132,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
               dbg( s"*** not authorized to subscribe" )
               error( conn, headers, "not authorized" )
             }
-          case ("UNSUBSCRIBE", headers, _) =>
+          case Some( ("UNSUBSCRIBE", headers, _) ) =>
             dbg( s"unsubscribe: $headers")
             required( conn, message, headers, "id" )
 
@@ -151,11 +154,11 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
             }
 
             receipt( conn, headers )
-          case ("DISCONNECT", headers, _) =>
+          case Some( ("DISCONNECT", headers, _) ) =>
             dbg( s"disconnect: $headers, $conn" )
             receipt( conn, headers )
             disconnect( conn )
-          case ("SEND", headers, body) =>
+          case Some( ("SEND", headers, body) ) =>
             dbg( s"send: $headers, $body" )
             required( conn, message, headers, "destination" )
 
@@ -165,7 +168,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
             }
 
             receipt( conn, headers )
-          case ("BEGIN", headers, _) =>
+          case Some( ("BEGIN", headers, _) ) =>
             dbg( s"begin: $headers" )
             required( conn, message, headers, "transaction" )
 
@@ -177,7 +180,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
               transactions(tx) = new ListBuffer[Message]
 
             receipt( conn, headers )
-          case ("COMMIT", headers, _) =>
+          case Some( ("COMMIT", headers, _) ) =>
             dbg( s"commit: $headers" )
             required( conn, message, headers, "transaction" )
 
@@ -193,7 +196,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
             }
 
             receipt( conn, headers )
-          case ("ABORT", headers, _) =>
+          case Some( ("ABORT", headers, _) ) =>
             dbg( s"abort: $headers" )
             required( conn, message, headers, "transaction" )
 
@@ -206,12 +209,13 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
             }
 
             receipt( conn, headers )
-          case ("ACK", headers, _) =>
+          case Some( ("ACK", headers, _) ) =>
             dbg( s"ack: $headers" )
 
-          case ("NACK", headers, _) =>
+          case Some( ("NACK", headers, _) ) =>
             dbg( s"nack: $headers" )
         }
+      }
     } )
   } )
 
@@ -222,7 +226,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
     reqres.asInstanceOf[Array[js.Any]](0).asInstanceOf[ClientRequest].end()
   } )
 
-  sockjs_echo.installHandlers( server, js.Dynamic.literal(prefix = path).asInstanceOf[ServerOptions] )
+  sock.installHandlers( server, js.Dynamic.literal(prefix = path).asInstanceOf[ServerOptions] )
   println( s"Listening on $hostname:$port")
   server.listen( port, hostname )
 
@@ -238,8 +242,8 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
     conn.write( message )
 
     connections get conn.id match {
-      case None =>
-      case Some( c ) => c.timer.refresh
+      case None | Some( StompConnection(_, _, _, _, null) ) =>
+      case Some( StompConnection(_, _, _, _, timer) ) => timer.refresh
     }
   }
 
@@ -290,7 +294,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   private def disconnect( conn: Connection ) = {
     setTimeout( _ => {
       connections get conn.id match {
-        case None =>
+        case None | Some( StompConnection(_, _, _, _, null) ) =>
         case Some( c ) => clearInterval( c.timer )
       }
 
@@ -298,24 +302,14 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
     }, CONNECTION_LINGERING_DELAY )
   }
 
-  private def parseMessage( message: String, conn: Connection ) = {
-    dbg( s"parseMessage: ${escape(message)}, $conn" )
+  private def parseClientMessage( message: String, conn: Connection ) = {
+    dbg( s"parse message: ${escape(message)}, $conn" )
 
-    val List(_, command, headers, body ) =
-      stompMessageRegex.exec( message ) match {
-        case null => error( conn, Map(), "couldn't parse message" )
-        case array => array.toList
-      }
-    val headerMap = HeaderRegex findAllMatchIn headers.toString map (m => unescape( m.group(1) ) -> unescape( m.group(2) )) toMap
-
-    (command.toString, headerMap, body.toString)
+     parseMessage( message ) match {
+      case None =>
+      case Some( res ) => res
+    }
   }
-
-  private def unescape( s: String ) = s.
-    replace( "\\r", "\r" ).
-    replace( "\\n", "\n" ).
-    replace( "\\c", ":" ).
-    replace( "\\\\", "\\" )
 
   private def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
     val errorHeaders =
