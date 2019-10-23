@@ -301,7 +301,11 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   private def parseMessage( message: String, conn: Connection ) = {
     dbg( s"parseMessage: ${escape(message)}, $conn" )
 
-    val List(_, command, headers, body ) = stompMessageRegex.exec( message ).toList
+    val List(_, command, headers, body ) =
+      stompMessageRegex.exec( message ) match {
+        case null => error( conn, Map(), "couldn't parse message" )
+        case array => array.toList
+      }
     val headerMap = HeaderRegex findAllMatchIn headers.toString map (m => unescape( m.group(1) ) -> unescape( m.group(2) )) toMap
 
     (command.toString, headerMap, body.toString)
