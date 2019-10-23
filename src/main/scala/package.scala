@@ -12,7 +12,7 @@ package object stomp_server {
     stompMessageRegex.exec( message ) match {
       case null => None
       case array =>
-        val List(_, command, headers, body ) = array.toList // todo: is the .toList necessary
+        val Array( _, command, headers, body ) = array.toArray
         val headerMap = headerRegex findAllMatchIn headers.toString map (m => unescape( m.group(1) ) -> unescape( m.group(2) )) toMap
 
         Some( (command.toString, headerMap, body.toString) )

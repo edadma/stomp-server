@@ -14,6 +14,7 @@ import scala.scalajs.js
 import js.annotation.{JSExport, JSExportTopLevel}
 import js.JSConverters._
 
+
 object StompServer {
 
   private val DEFAULT_CONTENT_TYPE = "text/plain"

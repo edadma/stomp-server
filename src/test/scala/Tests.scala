@@ -14,6 +14,7 @@ object Tests {
 
   private val serverHostname = "0.0.0.0"
   private val serverPort = 15674
+  private val serverPath = "/stomp"
 
 }
 
@@ -25,7 +26,7 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
   val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", _ => true, _ => true, true )
 
 	"connect" in {
-    val sock = new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp")
+    val sock = new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort$serverPath")
     val client = stompjsMod.over( sock )
     val p = Promise[Assertion]
 
@@ -38,7 +39,7 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
 	}
 
   "subscribe" in {
-    val sock = new sockjsDashClientMod.^( s"http://$serverHostname:$serverPort/stomp" )
+    val sock = new sockjsDashClientMod.^( s"http://$serverHostname:$serverPort$serverPath" )
     val client = stompjsMod.over( sock )
     val p = Promise[Assertion]
 
@@ -56,7 +57,7 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
   }
 
   "disconnect" in {
-    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort/stomp") )
+    val client = stompjsMod.over( new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort$serverPath") )
     val p = Promise[Assertion]
 
     client.connect( js.Dynamic.literal(Authorization = "Bearer asdf"), frame => {
@@ -67,25 +68,21 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
   }
 
 //  "send" in {
-//    val sock = new sockjsDashClientMod.^( s"http://$serverHostname:$serverPort/stomp" )
-//    val client = stompjsMod.over( sock )
+//    val client = new StompClient( serverHostname, serverPort, serverPath, _.connect(Map()), onMessage )
 //    val p = Promise[Assertion]
 //
-//    client.connect( js.Dynamic.literal(), frame => {
-//      println( frame.asInstanceOf[Frame].command)
-//      if (frame.asInstanceOf[Frame].command == "CONNECTED") {
-//        client.subscribe("data", (message: Message) => {
-//          message.command match {
-//            case "MESSAGE" =>
-//              p success assert(true)
-//              sock.close
-//            case "RECEIPT" =>
-//              client.send( "data" )
-//          }
-//        }, js.Dynamic.literal(receipt = 123))
-////        server.send( "data", "asdf" )
+//    def onMessage( command: String, headers: Map[String, String], body: String ) = {
+//      println( command, headers, body )
+//
+//      command match {
+//        case "CONNECTED" =>
+//          client.send( "SUBSCRIBE", Map("id" -> "0", "destination" -> "data", "receipt" -> "my-receipt") )
+//        case "MESSAGE" =>
+//          p success assert(true)
+//        case "RECEIPT" =>
+//
 //      }
-//    } )
+//    }
 //
 //    p.future
 //  }
