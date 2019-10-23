@@ -292,7 +292,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
       true
   }
 
-  private def disconnect( conn: Connection ) = {
+  private def disconnect( conn: Connection ): Unit = {
     setTimeout( _ => {
       connections get conn.id match {
         case None | Some( StompConnection(_, _, _, _, null) ) =>
@@ -301,15 +301,6 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
       conn.close
     }, CONNECTION_LINGERING_DELAY )
-  }
-
-  private def parseClientMessage( message: String, conn: Connection ) = {
-    dbg( s"parse message: ${escape(message)}, $conn" )
-
-     parseMessage( message ) match {
-      case None =>
-      case Some( res ) => res
-    }
   }
 
   private def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {
@@ -328,22 +319,28 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   }
 
   @JSExport
-  def send( queue: String, body: String, contentType: String = "text/plain" ): Unit =
+  def send( queue: String, body: String, contentType: String = "text/plain" ): Unit = {
+    if (queue eq null)
+      sys.error( "null queue name" )
+
     queueMap get queue match {
       case None =>
       case Some( subs ) =>
         for (Subscriber(client, subscriptionId) <- subs) {
-          dbg( s"messaging $client, queue $queue: '$body'")
+          val s = if (body eq null) "null" else body
+
+          dbg( s"messaging $client, queue $queue: '$s'")
           sendMessage( connections(client).conn, "MESSAGE",
             List(
               "subscription" -> subscriptionId,
               "message-id" -> uuidMod.^.v1,
               "destination" -> queue,
               "content-type" -> contentType,
-              "content-length" -> body.length.toString),
-            body )
+              "content-length" -> s.length.toString),
+            s )
         }
     }
+  }
 
   @JSExport
   def queues() = queueMap.keysIterator.toJSArray.sorted

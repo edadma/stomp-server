@@ -1809,6 +1809,11 @@ function $isArrayOf_sjs_js_Any(obj, depth) {
 function $asArrayOf_sjs_js_Any(obj, depth) {
   return (($isArrayOf_sjs_js_Any(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lscala.scalajs.js.Any;", depth))
 }
+var $d_sjs_js_UndefOr = new $TypeData().initClass({
+  sjs_js_UndefOr: 0
+}, false, "scala.scalajs.js.UndefOr", {
+  sjs_js_UndefOr: 1
+}, true, (void 0), $noIsInstance);
 /** @constructor */
 function $c_Lxyz_hyperreal_stomp$undserver_StompServer() {
   $c_O.call(this);
@@ -1820,7 +1825,7 @@ function $c_Lxyz_hyperreal_stomp$undserver_StompServer() {
   this.connectAuthorize$1 = null;
   this.subscribeAuthorize$1 = null;
   this.debug$1 = false;
-  this.sockjs$undecho$1 = null;
+  this.sock$1 = null;
   this.subscriptions$1 = null;
   this.connections$1 = null;
   this.queueMap$1 = null;
@@ -1844,356 +1849,397 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$unds
         $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection($this.connections$1.apply__O__O($as_T(conn$1.id))).lastReceived$1 = $m_jl_System$().currentTimeMillis__J();
         return (void 0)
       } else {
-        var x1 = $this.parseMessage__p1__T__Ltypings_sockjs_sockjsMod_Connection__T3(message, conn$1);
-        if ((x1 !== null)) {
-          var p2 = $as_T(x1.$$und1$1);
-          var headers = $as_sci_Map(x1.$$und2$1);
-          if (((p2 === "CONNECT") || (p2 === "STOMP"))) {
-            $this.dbg__p1__T__V(((("stomp connection: " + headers) + " over ") + conn$1));
-            var array = ["accept-version"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array));
-            var jsx$2 = $this.connectAuthorize$1;
-            var this$4 = $m_sjs_js_JSConverters$JSRichGenMap$();
-            var result = {};
-            headers.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, result$1) {
-              return (function(x0$1$2) {
-                var x0$1 = $as_T2(x0$1$2);
-                if ((x0$1 !== null)) {
-                  var key = $as_T(x0$1.$$und1__O());
-                  var value = x0$1.$$und2__O();
-                  result$1[key] = value
-                } else {
-                  throw new $c_s_MatchError().init___O(x0$1)
-                }
-              })
-            })(this$4, result)));
-            var jsx$1 = jsx$2(result);
-            if ($uZ(jsx$1)) {
-              var thiz = $as_T(headers.getOrElse__O__F0__O("heart-beat", new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$2) {
-                return (function() {
-                  return "0,0"
-                })
-              })($this))));
-              var xs = $m_sjsr_RuntimeString$().split__T__T__I__AT(thiz, ",", 0);
-              var elems$2 = null;
-              elems$2 = [];
-              var x1$1 = xs.u.length;
-              switch (x1$1) {
-                case (-1): {
-                  break
-                }
-              };
-              var i = 0;
-              var len = xs.u.length;
-              while ((i < len)) {
-                var index = i;
-                var arg1 = xs.get(index);
-                var x$1 = $as_T(arg1);
-                var this$17 = new $c_sci_StringOps().init___T(x$1);
-                var this$19 = $m_jl_Integer$();
-                var $$this = this$17.repr$1;
-                var elem = this$19.parseInt__T__I__I($$this, 10);
-                elems$2.push(elem);
-                i = ((1 + i) | 0)
-              };
-              var x1$2 = $makeNativeArrayWrapper($d_I.getArrayOf(), elems$2);
-              matchEnd4: {
-                var x$2_$_$$und1$f;
-                var x$2_$_$$und2$f;
-                var x$2_$_$$und1$mcI$sp$f;
-                var x$2_$_$$und2$mcI$sp$f;
-                var o7 = $m_s_Array$().unapplySeq__O__s_Option(x1$2);
-                if (((!o7.isEmpty__Z()) && ((o7.get__O() !== null) && ($as_sc_SeqLike(o7.get__O()).lengthCompare__I__I(2) === 0)))) {
-                  var cx = $uI($as_sc_SeqLike(o7.get__O()).apply__I__O(0));
-                  var cy = $uI($as_sc_SeqLike(o7.get__O()).apply__I__O(1));
-                  var x$2_$_$$und1$f = null;
-                  var x$2_$_$$und2$f = null;
-                  var x$2_$_$$und1$mcI$sp$f = cx;
-                  var x$2_$_$$und2$mcI$sp$f = cy;
-                  break matchEnd4
-                };
-                throw new $c_s_MatchError().init___O(x1$2)
-              };
-              var cx$2 = x$2_$_$$und1$mcI$sp$f;
-              var cy$2 = x$2_$_$$und2$mcI$sp$f;
-              var send = ((cy$2 < 10000) ? cy$2 : 10000);
-              var rec = ((cx$2 < 10000) ? cx$2 : 10000);
-              var this$28 = $this.connections$1;
-              var key$1 = $as_T(conn$1.id);
-              var value$1 = ((send === 0) ? ($this.dbg__p1__T__V("send heart beats never"), new $c_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection().init___Lxyz_hyperreal_stomp$undserver_StompServer__Ltypings_sockjs_sockjsMod_Connection__I__I__J__Ltypings_node_NodeJS_Timeout($this, conn$1, 0, rec, $m_jl_System$().currentTimeMillis__J(), null)) : ($this.dbg__p1__T__V((("send heart beats every " + send) + " milliseconds")), new $c_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection().init___Lxyz_hyperreal_stomp$undserver_StompServer__Ltypings_sockjs_sockjsMod_Connection__I__I__J__Ltypings_node_NodeJS_Timeout($this, conn$1, send, rec, $m_jl_System$().currentTimeMillis__J(), (0, $g.setInterval)((function(arg$outer, conn$1$1) {
-                return (function(arg1$2) {
-                  arg$outer.heartBeat$1__p1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__O(arg1$2, conn$1$1)
-                })
-              })($this, conn$1), send))));
-              this$28.put__O__O__s_Option(key$1, value$1);
-              $m_sci_List$();
-              var jsx$5 = new $c_T2().init___O__O("version", "1.2");
-              var jsx$4 = new $c_T2().init___O__O("heart-beat", "10000,10000");
-              var y = $this.createSession__p1__T();
-              var jsx$3 = new $c_T2().init___O__O("session", y);
-              var y$1 = $this.name$1;
-              var array$1 = [jsx$5, jsx$4, jsx$3, new $c_T2().init___O__O("server", y$1)];
-              var i$1 = (((-1) + $uI(array$1.length)) | 0);
-              var result$2 = $m_sci_Nil$();
-              while ((i$1 >= 0)) {
-                var this$40 = result$2;
-                var index$1 = i$1;
-                var x = array$1[index$1];
-                result$2 = new $c_sci_$colon$colon().init___O__sci_List(x, this$40);
-                i$1 = (((-1) + i$1) | 0)
-              };
-              return $this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(conn$1, "CONNECTED", result$2, "")
-            } else {
-              $this.dbg__p1__T__V("*** not authorized to connect");
-              $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers, "not authorized", "");
-              return (void 0)
-            }
-          }
+        $this.dbg__p1__T__V(((("parse message: " + $this.escape__p1__T__T(message)) + ", ") + conn$1));
+        var rc54 = false;
+        var x2 = null;
+        var x1 = $m_Lxyz_hyperreal_stomp$undserver_package$().parseMessage__T__s_Option(message);
+        var x = $m_s_None$();
+        if ((x === x1)) {
+          $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, $as_sci_Map($m_s_Predef$().Map$2.apply__sc_Seq__sc_GenMap($m_sci_Nil$())), "couldn't parse message", "");
+          return (void 0)
         };
-        if ((x1 !== null)) {
-          var p4 = $as_T(x1.$$und1$1);
-          var headers$2 = $as_sci_Map(x1.$$und2$1);
-          if ((p4 === "SUBSCRIBE")) {
-            $this.dbg__p1__T__V(((("subscribe: " + headers$2) + ", ") + conn$1));
-            var array$2 = ["destination", "id"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$2, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$2));
-            var jsx$7 = $this.subscribeAuthorize$1;
-            var this$44 = $m_sjs_js_JSConverters$JSRichGenMap$();
-            var result$3 = {};
-            headers$2.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$3, result$4) {
-              return (function(x0$1$2$1) {
-                var x0$1$1 = $as_T2(x0$1$2$1);
-                if ((x0$1$1 !== null)) {
-                  var key$2 = $as_T(x0$1$1.$$und1__O());
-                  var value$2 = x0$1$1.$$und2__O();
-                  result$4[key$2] = value$2
-                } else {
-                  throw new $c_s_MatchError().init___O(x0$1$1)
-                }
-              })
-            })(this$44, result$3)));
-            var jsx$6 = jsx$7(result$3);
-            if ($uZ(jsx$6)) {
-              var subscriber = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$Subscriber().init___Lxyz_hyperreal_stomp$undserver_StompServer__T__T($this, $as_T(conn$1.id), $as_T(headers$2.apply__O__O("id")));
-              if ($this.subscriptions$1.contains__O__Z(subscriber)) {
-                $this.dbg__p1__T__V(("*** duplicate subscription: " + subscriber));
-                $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$2, "duplicate subscription", "");
-                return (void 0)
-              } else {
-                var queue = $as_T(headers$2.apply__O__O("destination"));
-                var this$46 = $this.subscriptions$1;
-                var value$3 = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$Subscription().init___Lxyz_hyperreal_stomp$undserver_StompServer__T__T($this, $as_T(headers$2.apply__O__O("destination")), $as_T(headers$2.getOrElse__O__F0__O("ack", new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$3$1) {
-                  return (function() {
-                    return "auto"
-                  })
-                })($this)))));
-                this$46.put__O__O__s_Option(subscriber, value$3);
-                var x1$3 = $this.queueMap$1.get__O__s_Option(queue);
-                var x$3 = $m_s_None$();
-                if ((x$3 === x1$3)) {
-                  $this.dbg__p1__T__V(((("created queue '" + queue) + "' for ") + subscriber));
-                  var array$3 = [subscriber];
-                  if (($uI(array$3.length) === 0)) {
-                    var jsx$8 = new $c_scm_HashSet().init___()
+        if ((x1 instanceof $c_s_Some)) {
+          rc54 = true;
+          x2 = $as_s_Some(x1);
+          var p3 = $as_T3(x2.value$2);
+          if ((p3 !== null)) {
+            var p4 = $as_T(p3.$$und1$1);
+            var headers = $as_sci_Map(p3.$$und2$1);
+            if (((p4 === "CONNECT") || (p4 === "STOMP"))) {
+              $this.dbg__p1__T__V(((("stomp connection: " + headers) + " over ") + conn$1));
+              var array = ["accept-version"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array));
+              var jsx$2 = $this.connectAuthorize$1;
+              var this$4 = $m_sjs_js_JSConverters$JSRichGenMap$();
+              var result = {};
+              headers.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, result$1) {
+                return (function(x0$1$2) {
+                  var x0$1 = $as_T2(x0$1$2);
+                  if ((x0$1 !== null)) {
+                    var key = $as_T(x0$1.$$und1__O());
+                    var value = x0$1.$$und2__O();
+                    result$1[key] = value
                   } else {
-                    var b = new $c_scm_GrowingBuilder().init___scg_Growable(new $c_scm_HashSet().init___());
-                    var i$2 = 0;
-                    var len$1 = $uI(array$3.length);
-                    while ((i$2 < len$1)) {
-                      var index$2 = i$2;
-                      var arg1$1 = array$3[index$2];
-                      b.$$plus$eq__O__scm_GrowingBuilder(arg1$1);
-                      i$2 = ((1 + i$2) | 0)
-                    };
-                    var jsx$8 = $as_sc_GenTraversable(b.elems$1)
-                  };
-                  var subscribers = $as_scm_HashSet(jsx$8)
-                } else {
-                  if ((!(x1$3 instanceof $c_s_Some))) {
-                    throw new $c_s_MatchError().init___O(x1$3)
-                  };
-                  var x2 = $as_s_Some(x1$3);
-                  var subs = $as_scm_HashSet(x2.value$2);
-                  var subscribers = subs.$$plus$eq__O__scm_HashSet(subscriber)
-                };
-                var this$50 = $this.queueMap$1;
-                this$50.put__O__O__s_Option(queue, subscribers);
-                $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$2);
-                return (void 0)
-              }
-            } else {
-              $this.dbg__p1__T__V("*** not authorized to subscribe");
-              $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$2, "not authorized", "");
-              return (void 0)
-            }
-          }
-        };
-        if ((x1 !== null)) {
-          var p6 = $as_T(x1.$$und1$1);
-          var headers$3 = $as_sci_Map(x1.$$und2$1);
-          if ((p6 === "UNSUBSCRIBE")) {
-            $this.dbg__p1__T__V(("unsubscribe: " + headers$3));
-            var array$4 = ["id"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$3, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$4));
-            var subscriber$2 = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$Subscriber().init___Lxyz_hyperreal_stomp$undserver_StompServer__T__T($this, $as_T(conn$1.id), $as_T(headers$3.apply__O__O("id")));
-            var x1$4 = $this.subscriptions$1.get__O__s_Option(subscriber$2);
-            matchEnd7: {
-              if ((x1$4 instanceof $c_s_Some)) {
-                var x2$2 = $as_s_Some(x1$4);
-                var p3 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Subscription(x2$2.value$2);
-                if ((p3 !== null)) {
-                  var queue$2 = p3.queue$1;
-                  $this.subscriptions$1.$$minus$eq__O__scm_HashMap(subscriber$2);
-                  var set = $as_scm_HashSet($this.queueMap$1.apply__O__O(queue$2));
-                  set.$$minus$eq__O__scm_HashSet(subscriber$2);
-                  if ($f_sc_SetLike__isEmpty__Z(set)) {
-                    $this.queueMap$1.$$minus$eq__O__scm_HashMap(queue$2)
-                  } else {
-                    (void 0)
-                  };
-                  break matchEnd7
-                }
-              };
-              var x$4 = $m_s_None$();
-              if ((x$4 === x1$4)) {
-                $this.dbg__p1__T__V(("*** subscription not found: " + subscriber$2));
-                $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$3, "subscription not found", "");
-                break matchEnd7
-              };
-              throw new $c_s_MatchError().init___O(x1$4)
-            };
-            $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$3);
-            return (void 0)
-          }
-        };
-        if ((x1 !== null)) {
-          var p8 = $as_T(x1.$$und1$1);
-          var headers$4 = $as_sci_Map(x1.$$und2$1);
-          if ((p8 === "DISCONNECT")) {
-            $this.dbg__p1__T__V(((("disconnect: " + headers$4) + ", ") + conn$1));
-            $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$4);
-            return $this.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__Ltypings_node_NodeJS_Timeout(conn$1)
-          }
-        };
-        if ((x1 !== null)) {
-          var p10 = $as_T(x1.$$und1$1);
-          var headers$5 = $as_sci_Map(x1.$$und2$1);
-          var body = $as_T(x1.$$und3$1);
-          if ((p10 === "SEND")) {
-            $this.dbg__p1__T__V(((("send: " + headers$5) + ", ") + body));
-            var array$5 = ["destination"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$5, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$5));
-            var x1$5 = headers$5.get__O__s_Option("transaction");
-            if ((x1$5 instanceof $c_s_Some)) {
-              var x2$3 = $as_s_Some(x1$5);
-              var tx = $as_T(x2$3.value$2);
-              $this.addToTransaction__p1__T__sci_Map__T__scm_ListBuffer(tx, headers$5, body)
-            } else {
-              var x$6 = $m_s_None$();
-              if ((x$6 === x1$5)) {
-                $this.send__T__T__T__V($as_T(headers$5.apply__O__O("destination")), body, $as_T(headers$5.getOrElse__O__F0__O("content-type", new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$4$1) {
-                  return (function() {
-                    return "text/plain"
-                  })
-                })($this)))))
-              } else {
-                throw new $c_s_MatchError().init___O(x1$5)
-              }
-            };
-            $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$5);
-            return (void 0)
-          }
-        };
-        if ((x1 !== null)) {
-          var p11 = $as_T(x1.$$und1$1);
-          var headers$6 = $as_sci_Map(x1.$$und2$1);
-          if ((p11 === "BEGIN")) {
-            $this.dbg__p1__T__V(("begin: " + headers$6));
-            var array$6 = ["transaction"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$6, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$6));
-            var tx$2 = $as_T(headers$6.apply__O__O("transaction"));
-            if ($this.transactions$1.contains__O__Z(tx$2)) {
-              $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$6, "transaction already begun", "")
-            } else {
-              var this$57 = $this.transactions$1;
-              var value$4 = new $c_scm_ListBuffer().init___();
-              this$57.put__O__O__s_Option(tx$2, value$4)
-            };
-            $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$6);
-            return (void 0)
-          }
-        };
-        if ((x1 !== null)) {
-          var p13 = $as_T(x1.$$und1$1);
-          var headers$7 = $as_sci_Map(x1.$$und2$1);
-          if ((p13 === "COMMIT")) {
-            $this.dbg__p1__T__V(("commit: " + headers$7));
-            var array$7 = ["transaction"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$7, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$7));
-            var tx$3 = $as_T(headers$7.apply__O__O("transaction"));
-            var x1$6 = $this.transactions$1.get__O__s_Option(tx$3);
-            var x$8 = $m_s_None$();
-            if ((x$8 === x1$6)) {
-              $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$7, "transaction doesn't exist", "")
-            } else if ((x1$6 instanceof $c_s_Some)) {
-              var x2$4 = $as_s_Some(x1$6);
-              var msgs = $as_scm_ListBuffer(x2$4.value$2);
-              var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
-                return (function(check$ifrefutable$1$2) {
-                  var check$ifrefutable$1 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Message(check$ifrefutable$1$2);
-                  return (check$ifrefutable$1 !== null)
-                })
-              })($this));
-              new $c_sc_TraversableLike$WithFilter().init___sc_TraversableLike__F1(msgs, p).foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$6$1) {
-                return (function(x$3$2$2) {
-                  var x$3$2 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Message(x$3$2$2);
-                  if ((x$3$2 !== null)) {
-                    var queue$1 = x$3$2.queue$1;
-                    var body$1 = x$3$2.body$1;
-                    var contentType = x$3$2.contentType$1;
-                    this$6$1.send__T__T__T__V(queue$1, body$1, contentType)
-                  } else {
-                    throw new $c_s_MatchError().init___O(x$3$2)
+                    throw new $c_s_MatchError().init___O(x0$1)
                   }
                 })
-              })($this)));
-              $this.transactions$1.$$minus$eq__O__scm_HashMap(tx$3)
-            } else {
-              throw new $c_s_MatchError().init___O(x1$6)
-            };
-            $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$7);
-            return (void 0)
+              })(this$4, result)));
+              var jsx$1 = jsx$2(result);
+              if ($uZ(jsx$1)) {
+                var thiz = $as_T(headers.getOrElse__O__F0__O("heart-beat", new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$2) {
+                  return (function() {
+                    return "0,0"
+                  })
+                })($this))));
+                var xs = $m_sjsr_RuntimeString$().split__T__T__I__AT(thiz, ",", 0);
+                var elems$2 = null;
+                elems$2 = [];
+                var x1$1 = xs.u.length;
+                switch (x1$1) {
+                  case (-1): {
+                    break
+                  }
+                };
+                var i = 0;
+                var len = xs.u.length;
+                while ((i < len)) {
+                  var index = i;
+                  var arg1 = xs.get(index);
+                  var x$1 = $as_T(arg1);
+                  var this$17 = new $c_sci_StringOps().init___T(x$1);
+                  var this$19 = $m_jl_Integer$();
+                  var $$this = this$17.repr$1;
+                  var elem = this$19.parseInt__T__I__I($$this, 10);
+                  elems$2.push(elem);
+                  i = ((1 + i) | 0)
+                };
+                var x1$2 = $makeNativeArrayWrapper($d_I.getArrayOf(), elems$2);
+                matchEnd4: {
+                  var x$2$2_$_$$und1$f;
+                  var x$2$2_$_$$und2$f;
+                  var x$2$2_$_$$und1$mcI$sp$f;
+                  var x$2$2_$_$$und2$mcI$sp$f;
+                  var o7 = $m_s_Array$().unapplySeq__O__s_Option(x1$2);
+                  if (((!o7.isEmpty__Z()) && ((o7.get__O() !== null) && ($as_sc_SeqLike(o7.get__O()).lengthCompare__I__I(2) === 0)))) {
+                    var cx = $uI($as_sc_SeqLike(o7.get__O()).apply__I__O(0));
+                    var cy = $uI($as_sc_SeqLike(o7.get__O()).apply__I__O(1));
+                    var x$2$2_$_$$und1$f = null;
+                    var x$2$2_$_$$und2$f = null;
+                    var x$2$2_$_$$und1$mcI$sp$f = cx;
+                    var x$2$2_$_$$und2$mcI$sp$f = cy;
+                    break matchEnd4
+                  };
+                  throw new $c_s_MatchError().init___O(x1$2)
+                };
+                var cx$2 = x$2$2_$_$$und1$mcI$sp$f;
+                var cy$2 = x$2$2_$_$$und2$mcI$sp$f;
+                var send = ((cy$2 < 10000) ? cy$2 : 10000);
+                var rec = ((cx$2 < 10000) ? cx$2 : 10000);
+                var this$28 = $this.connections$1;
+                var key$1 = $as_T(conn$1.id);
+                var value$1 = ((send === 0) ? ($this.dbg__p1__T__V("send heart beats never"), new $c_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection().init___Lxyz_hyperreal_stomp$undserver_StompServer__Ltypings_sockjs_sockjsMod_Connection__I__I__J__Ltypings_node_NodeJS_Timeout($this, conn$1, 0, rec, $m_jl_System$().currentTimeMillis__J(), null)) : ($this.dbg__p1__T__V((("send heart beats every " + send) + " milliseconds")), new $c_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection().init___Lxyz_hyperreal_stomp$undserver_StompServer__Ltypings_sockjs_sockjsMod_Connection__I__I__J__Ltypings_node_NodeJS_Timeout($this, conn$1, send, rec, $m_jl_System$().currentTimeMillis__J(), (0, $g.setInterval)((function(arg$outer, conn$1$1) {
+                  return (function(arg1$2) {
+                    arg$outer.heartBeat$1__p1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__O(arg1$2, conn$1$1)
+                  })
+                })($this, conn$1), send))));
+                this$28.put__O__O__s_Option(key$1, value$1);
+                $m_sci_List$();
+                var jsx$5 = new $c_T2().init___O__O("version", "1.2");
+                var jsx$4 = new $c_T2().init___O__O("heart-beat", "10000,10000");
+                var y = $this.createSession__p1__T();
+                var jsx$3 = new $c_T2().init___O__O("session", y);
+                var y$1 = $this.name$1;
+                var array$1 = [jsx$5, jsx$4, jsx$3, new $c_T2().init___O__O("server", y$1)];
+                var i$1 = (((-1) + $uI(array$1.length)) | 0);
+                var result$2 = $m_sci_Nil$();
+                while ((i$1 >= 0)) {
+                  var this$40 = result$2;
+                  var index$1 = i$1;
+                  var x$2 = array$1[index$1];
+                  result$2 = new $c_sci_$colon$colon().init___O__sci_List(x$2, this$40);
+                  i$1 = (((-1) + i$1) | 0)
+                };
+                return $this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(conn$1, "CONNECTED", result$2, "")
+              } else {
+                $this.dbg__p1__T__V("*** not authorized to connect");
+                $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers, "not authorized", "");
+                return (void 0)
+              }
+            }
           }
         };
-        if ((x1 !== null)) {
-          var p15 = $as_T(x1.$$und1$1);
-          var headers$8 = $as_sci_Map(x1.$$und2$1);
-          if ((p15 === "ABORT")) {
-            $this.dbg__p1__T__V(("abort: " + headers$8));
-            var array$8 = ["transaction"];
-            $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$8, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$8));
-            var tx$4 = $as_T(headers$8.apply__O__O("transaction"));
-            if ($this.transactions$1.contains__O__Z(tx$4)) {
-              $this.transactions$1.$$minus$eq__O__scm_HashMap(tx$4)
-            };
-            $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$8);
-            return (void 0)
+        if (rc54) {
+          var p7 = $as_T3(x2.value$2);
+          if ((p7 !== null)) {
+            var p8 = $as_T(p7.$$und1$1);
+            var headers$2 = $as_sci_Map(p7.$$und2$1);
+            if ((p8 === "SUBSCRIBE")) {
+              $this.dbg__p1__T__V(((("subscribe: " + headers$2) + ", ") + conn$1));
+              var array$2 = ["destination", "id"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$2, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$2));
+              var jsx$7 = $this.subscribeAuthorize$1;
+              var this$44 = $m_sjs_js_JSConverters$JSRichGenMap$();
+              var result$3 = {};
+              headers$2.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$3, result$4) {
+                return (function(x0$1$2$1) {
+                  var x0$1$1 = $as_T2(x0$1$2$1);
+                  if ((x0$1$1 !== null)) {
+                    var key$2 = $as_T(x0$1$1.$$und1__O());
+                    var value$2 = x0$1$1.$$und2__O();
+                    result$4[key$2] = value$2
+                  } else {
+                    throw new $c_s_MatchError().init___O(x0$1$1)
+                  }
+                })
+              })(this$44, result$3)));
+              var jsx$6 = jsx$7(result$3);
+              if ($uZ(jsx$6)) {
+                var subscriber = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$Subscriber().init___Lxyz_hyperreal_stomp$undserver_StompServer__T__T($this, $as_T(conn$1.id), $as_T(headers$2.apply__O__O("id")));
+                if ($this.subscriptions$1.contains__O__Z(subscriber)) {
+                  $this.dbg__p1__T__V(("*** duplicate subscription: " + subscriber));
+                  $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$2, "duplicate subscription", "");
+                  return (void 0)
+                } else {
+                  var queue = $as_T(headers$2.apply__O__O("destination"));
+                  var this$46 = $this.subscriptions$1;
+                  var value$3 = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$Subscription().init___Lxyz_hyperreal_stomp$undserver_StompServer__T__T($this, $as_T(headers$2.apply__O__O("destination")), $as_T(headers$2.getOrElse__O__F0__O("ack", new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$3$1) {
+                    return (function() {
+                      return "auto"
+                    })
+                  })($this)))));
+                  this$46.put__O__O__s_Option(subscriber, value$3);
+                  var x1$3 = $this.queueMap$1.get__O__s_Option(queue);
+                  var x$3 = $m_s_None$();
+                  if ((x$3 === x1$3)) {
+                    $this.dbg__p1__T__V(((("created queue '" + queue) + "' for ") + subscriber));
+                    var array$3 = [subscriber];
+                    if (($uI(array$3.length) === 0)) {
+                      var jsx$8 = new $c_scm_HashSet().init___()
+                    } else {
+                      var b = new $c_scm_GrowingBuilder().init___scg_Growable(new $c_scm_HashSet().init___());
+                      var i$2 = 0;
+                      var len$1 = $uI(array$3.length);
+                      while ((i$2 < len$1)) {
+                        var index$2 = i$2;
+                        var arg1$1 = array$3[index$2];
+                        b.$$plus$eq__O__scm_GrowingBuilder(arg1$1);
+                        i$2 = ((1 + i$2) | 0)
+                      };
+                      var jsx$8 = $as_sc_GenTraversable(b.elems$1)
+                    };
+                    var subscribers = $as_scm_HashSet(jsx$8)
+                  } else {
+                    if ((!(x1$3 instanceof $c_s_Some))) {
+                      throw new $c_s_MatchError().init___O(x1$3)
+                    };
+                    var x2$2 = $as_s_Some(x1$3);
+                    var subs = $as_scm_HashSet(x2$2.value$2);
+                    var subscribers = subs.$$plus$eq__O__scm_HashSet(subscriber)
+                  };
+                  var this$50 = $this.queueMap$1;
+                  this$50.put__O__O__s_Option(queue, subscribers);
+                  $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$2);
+                  return (void 0)
+                }
+              } else {
+                $this.dbg__p1__T__V("*** not authorized to subscribe");
+                $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$2, "not authorized", "");
+                return (void 0)
+              }
+            }
           }
         };
-        if ((x1 !== null)) {
-          var p17 = $as_T(x1.$$und1$1);
-          var headers$9 = $as_sci_Map(x1.$$und2$1);
-          if ((p17 === "ACK")) {
-            $this.dbg__p1__T__V(("ack: " + headers$9));
-            return (void 0)
+        if (rc54) {
+          var p11 = $as_T3(x2.value$2);
+          if ((p11 !== null)) {
+            var p12 = $as_T(p11.$$und1$1);
+            var headers$3 = $as_sci_Map(p11.$$und2$1);
+            if ((p12 === "UNSUBSCRIBE")) {
+              $this.dbg__p1__T__V(("unsubscribe: " + headers$3));
+              var array$4 = ["id"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$3, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$4));
+              var subscriber$2 = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$Subscriber().init___Lxyz_hyperreal_stomp$undserver_StompServer__T__T($this, $as_T(conn$1.id), $as_T(headers$3.apply__O__O("id")));
+              var x1$4 = $this.subscriptions$1.get__O__s_Option(subscriber$2);
+              matchEnd7: {
+                if ((x1$4 instanceof $c_s_Some)) {
+                  var x2$3 = $as_s_Some(x1$4);
+                  var p3$2 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Subscription(x2$3.value$2);
+                  if ((p3$2 !== null)) {
+                    var queue$2 = p3$2.queue$1;
+                    $this.subscriptions$1.$$minus$eq__O__scm_HashMap(subscriber$2);
+                    var set = $as_scm_HashSet($this.queueMap$1.apply__O__O(queue$2));
+                    set.$$minus$eq__O__scm_HashSet(subscriber$2);
+                    if ($f_sc_SetLike__isEmpty__Z(set)) {
+                      $this.queueMap$1.$$minus$eq__O__scm_HashMap(queue$2)
+                    } else {
+                      (void 0)
+                    };
+                    break matchEnd7
+                  }
+                };
+                var x$5 = $m_s_None$();
+                if ((x$5 === x1$4)) {
+                  $this.dbg__p1__T__V(("*** subscription not found: " + subscriber$2));
+                  $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$3, "subscription not found", "");
+                  break matchEnd7
+                };
+                throw new $c_s_MatchError().init___O(x1$4)
+              };
+              $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$3);
+              return (void 0)
+            }
           }
         };
-        if ((x1 !== null)) {
-          var p19 = $as_T(x1.$$und1$1);
-          var headers$10 = $as_sci_Map(x1.$$und2$1);
-          if ((p19 === "NACK")) {
-            $this.dbg__p1__T__V(("nack: " + headers$10));
-            return (void 0)
+        if (rc54) {
+          var p15 = $as_T3(x2.value$2);
+          if ((p15 !== null)) {
+            var p16 = $as_T(p15.$$und1$1);
+            var headers$4 = $as_sci_Map(p15.$$und2$1);
+            if ((p16 === "DISCONNECT")) {
+              $this.dbg__p1__T__V(((("disconnect: " + headers$4) + ", ") + conn$1));
+              $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$4);
+              $this.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__V(conn$1);
+              return (void 0)
+            }
+          }
+        };
+        if (rc54) {
+          var p19 = $as_T3(x2.value$2);
+          if ((p19 !== null)) {
+            var p20 = $as_T(p19.$$und1$1);
+            var headers$5 = $as_sci_Map(p19.$$und2$1);
+            var body = $as_T(p19.$$und3$1);
+            if ((p20 === "SEND")) {
+              $this.dbg__p1__T__V(((("send: " + headers$5) + ", ") + body));
+              var array$5 = ["destination"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$5, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$5));
+              var x1$5 = headers$5.get__O__s_Option("transaction");
+              if ((x1$5 instanceof $c_s_Some)) {
+                var x2$4 = $as_s_Some(x1$5);
+                var tx = $as_T(x2$4.value$2);
+                $this.addToTransaction__p1__T__sci_Map__T__scm_ListBuffer(tx, headers$5, body)
+              } else {
+                var x$7 = $m_s_None$();
+                if ((x$7 === x1$5)) {
+                  $this.send__T__T__T__V($as_T(headers$5.apply__O__O("destination")), body, $as_T(headers$5.getOrElse__O__F0__O("content-type", new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$4$1) {
+                    return (function() {
+                      return "text/plain"
+                    })
+                  })($this)))))
+                } else {
+                  throw new $c_s_MatchError().init___O(x1$5)
+                }
+              };
+              $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$5);
+              return (void 0)
+            }
+          }
+        };
+        if (rc54) {
+          var p22 = $as_T3(x2.value$2);
+          if ((p22 !== null)) {
+            var p23 = $as_T(p22.$$und1$1);
+            var headers$6 = $as_sci_Map(p22.$$und2$1);
+            if ((p23 === "BEGIN")) {
+              $this.dbg__p1__T__V(("begin: " + headers$6));
+              var array$6 = ["transaction"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$6, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$6));
+              var tx$2 = $as_T(headers$6.apply__O__O("transaction"));
+              if ($this.transactions$1.contains__O__Z(tx$2)) {
+                $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$6, "transaction already begun", "")
+              } else {
+                var this$57 = $this.transactions$1;
+                var value$4 = new $c_scm_ListBuffer().init___();
+                this$57.put__O__O__s_Option(tx$2, value$4)
+              };
+              $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$6);
+              return (void 0)
+            }
+          }
+        };
+        if (rc54) {
+          var p26 = $as_T3(x2.value$2);
+          if ((p26 !== null)) {
+            var p27 = $as_T(p26.$$und1$1);
+            var headers$7 = $as_sci_Map(p26.$$und2$1);
+            if ((p27 === "COMMIT")) {
+              $this.dbg__p1__T__V(("commit: " + headers$7));
+              var array$7 = ["transaction"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$7, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$7));
+              var tx$3 = $as_T(headers$7.apply__O__O("transaction"));
+              var x1$6 = $this.transactions$1.get__O__s_Option(tx$3);
+              var x$9 = $m_s_None$();
+              if ((x$9 === x1$6)) {
+                $this.error__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__T__T__V(conn$1, headers$7, "transaction doesn't exist", "")
+              } else if ((x1$6 instanceof $c_s_Some)) {
+                var x2$5 = $as_s_Some(x1$6);
+                var msgs = $as_scm_ListBuffer(x2$5.value$2);
+                var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
+                  return (function(check$ifrefutable$1$2) {
+                    var check$ifrefutable$1 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Message(check$ifrefutable$1$2);
+                    return (check$ifrefutable$1 !== null)
+                  })
+                })($this));
+                new $c_sc_TraversableLike$WithFilter().init___sc_TraversableLike__F1(msgs, p).foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$6$1) {
+                  return (function(x$3$2$2) {
+                    var x$3$2 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Message(x$3$2$2);
+                    if ((x$3$2 !== null)) {
+                      var queue$1 = x$3$2.queue$1;
+                      var body$1 = x$3$2.body$1;
+                      var contentType = x$3$2.contentType$1;
+                      this$6$1.send__T__T__T__V(queue$1, body$1, contentType)
+                    } else {
+                      throw new $c_s_MatchError().init___O(x$3$2)
+                    }
+                  })
+                })($this)));
+                $this.transactions$1.$$minus$eq__O__scm_HashMap(tx$3)
+              } else {
+                throw new $c_s_MatchError().init___O(x1$6)
+              };
+              $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$7);
+              return (void 0)
+            }
+          }
+        };
+        if (rc54) {
+          var p30 = $as_T3(x2.value$2);
+          if ((p30 !== null)) {
+            var p31 = $as_T(p30.$$und1$1);
+            var headers$8 = $as_sci_Map(p30.$$und2$1);
+            if ((p31 === "ABORT")) {
+              $this.dbg__p1__T__V(("abort: " + headers$8));
+              var array$8 = ["transaction"];
+              $this.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z(conn$1, message, headers$8, new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$8));
+              var tx$4 = $as_T(headers$8.apply__O__O("transaction"));
+              if ($this.transactions$1.contains__O__Z(tx$4)) {
+                $this.transactions$1.$$minus$eq__O__scm_HashMap(tx$4)
+              };
+              $this.receipt__p1__Ltypings_sockjs_sockjsMod_Connection__sci_Map__V(conn$1, headers$8);
+              return (void 0)
+            }
+          }
+        };
+        if (rc54) {
+          var p34 = $as_T3(x2.value$2);
+          if ((p34 !== null)) {
+            var p35 = $as_T(p34.$$und1$1);
+            var headers$9 = $as_sci_Map(p34.$$und2$1);
+            if ((p35 === "ACK")) {
+              $this.dbg__p1__T__V(("ack: " + headers$9));
+              return (void 0)
+            }
+          }
+        };
+        if (rc54) {
+          var p38 = $as_T3(x2.value$2);
+          if ((p38 !== null)) {
+            var p39 = $as_T(p38.$$und1$1);
+            var headers$10 = $as_sci_Map(p38.$$und2$1);
+            if ((p39 === "NACK")) {
+              $this.dbg__p1__T__V(("nack: " + headers$10));
+              return (void 0)
+            }
           }
         };
         throw new $c_s_MatchError().init___O(x1)
@@ -2212,12 +2258,12 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.init___T__T__I__T__sjs_j
   this.connectAuthorize$1 = connectAuthorize;
   this.subscribeAuthorize$1 = subscribeAuthorize;
   this.debug$1 = debug;
-  this.sockjs$undecho$1 = (0, $i_sockjs.createServer)();
+  this.sock$1 = (0, $i_sockjs.createServer)();
   this.subscriptions$1 = new $c_scm_HashMap().init___();
   this.connections$1 = new $c_scm_HashMap().init___();
   this.queueMap$1 = new $c_scm_HashMap().init___();
   this.transactions$1 = new $c_scm_HashMap().init___();
-  this.sockjs$undecho$1.on("connection", (function(arg$outer) {
+  this.sock$1.on("connection", (function(arg$outer) {
     return (function(arg1$2) {
       return arg$outer.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$new$1__Ltypings_sockjs_sockjsMod_Connection__Ltypings_sockjs_sockjsMod_Connection(arg1$2)
     })
@@ -2228,7 +2274,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.init___T__T__I__T__sjs_j
       arg$outer$1.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$new$10__sjs_js_Any__V(arg1$2$1)
     })
   })(this));
-  this.sockjs$undecho$1.installHandlers(this.server$1, {
+  this.sock$1.installHandlers(this.server$1, {
     "prefix": path
   });
   var x = ((("Listening on " + hostname) + ":") + port);
@@ -2253,6 +2299,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.heartBeat$1__p1__sjs_js_
     var t = x1.lastReceived$1;
     var lo = t.lo$2;
     var hi = t.hi$2;
+    var timer = x1.timer$1;
     var t$1 = $m_jl_System$().currentTimeMillis__J();
     var lo$1 = t$1.lo$2;
     var hi$1 = t$1.hi$2;
@@ -2263,7 +2310,9 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.heartBeat$1__p1__sjs_js_
     if (((hi$2 === hi$3) ? (((-2147483648) ^ lo$2) > ((-2147483648) ^ value)) : (hi$2 > hi$3))) {
       var id = $as_T(conn$1.id);
       this.dbg__p1__T__V(((((("dead connection: " + $as_T(conn$1.remoteAddress)) + ":") + $uD(conn$1.remotePort)) + "/") + conn$1));
-      (0, $g.clearInterval)($as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this.connections$1.apply__O__O(id)).timer$1);
+      if ((timer !== null)) {
+        (0, $g.clearInterval)(timer)
+      };
       conn$1.close();
       return this.connections$1.$$minus$eq__O__scm_HashMap(id)
     } else {
@@ -2320,9 +2369,12 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.error__p1__Ltypings_sock
   var this$20 = $m_sci_List$();
   var errorHeaders = $as_sci_List(jsx$3.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$1, this$20.ReusableCBFInstance$2));
   this.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(conn, "ERROR", errorHeaders, body);
-  this.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__Ltypings_node_NodeJS_Timeout(conn)
+  this.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__V(conn)
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (function(queue, body, contentType) {
+  if ((queue === null)) {
+    $m_s_sys_package$().error__T__sr_Nothing$("null queue name")
+  };
   var x1 = this.queueMap$1.get__O__s_Option(queue);
   var x = $m_s_None$();
   if ((!(x === x1))) {
@@ -2335,13 +2387,14 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (func
           return (check$ifrefutable$2 !== null)
         })
       })(this));
-      new $c_sc_TraversableLike$WithFilter().init___sc_TraversableLike__F1(subs, p).foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, queue$1, body$1, contentType$1) {
-        return (function(x$6$2) {
-          var x$6 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Subscriber(x$6$2);
-          if ((x$6 !== null)) {
-            var client = x$6.client$1;
-            var subscriptionId = x$6.subscriptionId$1;
-            this$2.dbg__p1__T__V((((((("messaging " + client) + ", queue ") + queue$1) + ": '") + body$1) + "'"));
+      new $c_sc_TraversableLike$WithFilter().init___sc_TraversableLike__F1(subs, p).foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, body$1, queue$1, contentType$1) {
+        return (function(x$5$2) {
+          var x$5 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$Subscriber(x$5$2);
+          if ((x$5 !== null)) {
+            var client = x$5.client$1;
+            var subscriptionId = x$5.subscriptionId$1;
+            var s = ((body$1 === null) ? "null" : body$1);
+            this$2.dbg__p1__T__V((((((("messaging " + client) + ", queue ") + queue$1) + ": '") + s) + "'"));
             var jsx$6 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this$2.connections$1.apply__O__O(client)).conn$1;
             $m_sci_List$();
             var jsx$5 = new $c_T2().init___O__O("subscription", subscriptionId);
@@ -2351,7 +2404,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (func
             var jsx$4 = new $c_T2().init___O__O("message-id", y);
             var jsx$2 = new $c_T2().init___O__O("destination", queue$1);
             var jsx$1 = new $c_T2().init___O__O("content-type", contentType$1);
-            var this$13 = $uI(body$1.length);
+            var this$13 = $uI(s.length);
             var y$1 = ("" + this$13);
             var array = [jsx$5, jsx$4, jsx$2, jsx$1, new $c_T2().init___O__O("content-length", y$1)];
             var i = (((-1) + $uI(array.length)) | 0);
@@ -2363,39 +2416,59 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (func
               result = new $c_sci_$colon$colon().init___O__sci_List(x$1, this$19);
               i = (((-1) + i) | 0)
             };
-            return this$2.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(jsx$6, "MESSAGE", result, body$1)
+            return this$2.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(jsx$6, "MESSAGE", result, s)
           } else {
-            throw new $c_s_MatchError().init___O(x$6)
+            throw new $c_s_MatchError().init___O(x$5)
           }
         })
-      })(this, queue, body, contentType)))
+      })(this, body, queue, contentType)))
     } else {
       throw new $c_s_MatchError().init___O(x1)
     }
   }
-});
-$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.unescape__p1__T__T = (function(s) {
-  var thiz = $as_T(s.split("\\r").join("\r"));
-  var thiz$1 = $as_T(thiz.split("\\n").join("\n"));
-  var thiz$2 = $as_T(thiz$1.split("\\c").join(":"));
-  return $as_T(thiz$2.split("\\\\").join("\\"))
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.$$js$exported$meth$queues__O = (function() {
   return this.queues__sjs_js_Array()
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$disconnect$1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__V = (function(x$4, conn$2) {
   var x1 = this.connections$1.get__O__s_Option($as_T(conn$2.id));
-  var x = $m_s_None$();
-  if ((!(x === x1))) {
+  matchEnd16: {
+    var jsx$1;
+    var x = $m_s_None$();
+    if ((x === x1)) {
+      var jsx$1 = true;
+      break matchEnd16
+    };
     if ((x1 instanceof $c_s_Some)) {
       var x2 = $as_s_Some(x1);
-      var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
+      var p3 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
+      if ((p3 !== null)) {
+        var p8 = p3.timer$1;
+        if ((p8 === null)) {
+          var jsx$1 = true;
+          break matchEnd16
+        }
+      }
+    };
+    var jsx$1 = false
+  };
+  if ((!jsx$1)) {
+    if ((x1 instanceof $c_s_Some)) {
+      var x9 = $as_s_Some(x1);
+      var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x9.value$2);
       (0, $g.clearInterval)(c.timer$1)
     } else {
       throw new $c_s_MatchError().init___O(x1)
     }
   };
   conn$2.close()
+});
+$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__V = (function(conn) {
+  (0, $g.setTimeout)((function(arg$outer, conn$2) {
+    return (function(arg1$2) {
+      arg$outer.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$disconnect$1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__V(arg1$2, conn$2)
+    })
+  })(this, conn), $m_Lxyz_hyperreal_stomp$undserver_StompServer$().xyz$hyperreal$stomp$undserver$StompServer$$CONNECTION$undLINGERING$undDELAY$1)
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.$$js$exported$meth$send__T__T__T__O = (function(queue, body, contentType) {
   this.send__T__T__T__V(queue, body, contentType)
@@ -2486,87 +2559,42 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.sendMessage__p1__Ltyping
   this.dbg__p1__T__V(((("sending message '" + this.escape__p1__T__T(message)) + "' to ") + conn));
   conn.write(message);
   var x1 = this.connections$1.get__O__s_Option($as_T(conn.id));
-  var x = $m_s_None$();
-  if ((x === x1)) {
+  matchEnd21: {
+    var jsx$2;
+    var x = $m_s_None$();
+    if ((x === x1)) {
+      var jsx$2 = true;
+      break matchEnd21
+    };
+    if ((x1 instanceof $c_s_Some)) {
+      var x2 = $as_s_Some(x1);
+      var p3 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
+      if ((p3 !== null)) {
+        var p8 = p3.timer$1;
+        if ((p8 === null)) {
+          var jsx$2 = true;
+          break matchEnd21
+        }
+      }
+    };
+    var jsx$2 = false
+  };
+  if (jsx$2) {
     return (void 0)
-  } else if ((x1 instanceof $c_s_Some)) {
-    var x2 = $as_s_Some(x1);
-    var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
-    return c.timer$1.refresh()
-  } else {
-    throw new $c_s_MatchError().init___O(x1)
-  }
+  };
+  if ((x1 instanceof $c_s_Some)) {
+    var x9 = $as_s_Some(x1);
+    var p10 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x9.value$2);
+    if ((p10 !== null)) {
+      var timer = p10.timer$1;
+      return timer.refresh()
+    }
+  };
+  throw new $c_s_MatchError().init___O(x1)
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$new$10__sjs_js_Any__V = (function(reqres) {
   this.dbg__p1__T__V("upgrade");
   $asArrayOf_sjs_js_Any(reqres, 1).get(0).end()
-});
-$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__Ltypings_node_NodeJS_Timeout = (function(conn) {
-  return (0, $g.setTimeout)((function(arg$outer, conn$2) {
-    return (function(arg1$2) {
-      arg$outer.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$disconnect$1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__V(arg1$2, conn$2)
-    })
-  })(this, conn), $m_Lxyz_hyperreal_stomp$undserver_StompServer$().xyz$hyperreal$stomp$undserver$StompServer$$CONNECTION$undLINGERING$undDELAY$1)
-});
-$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.parseMessage__p1__T__Ltypings_sockjs_sockjsMod_Connection__T3 = (function(message, conn) {
-  this.dbg__p1__T__V(((("parseMessage: " + this.escape__p1__T__T(message)) + ", ") + conn));
-  var array = $m_Lxyz_hyperreal_stomp$undserver_StompServer$().xyz$hyperreal$stomp$undserver$StompServer$$stompMessageRegex$1.exec(message);
-  var i = (((-1) + $uI(array.length)) | 0);
-  var result = $m_sci_Nil$();
-  while ((i >= 0)) {
-    var this$2 = result;
-    var index = i;
-    var x = array[index];
-    result = new $c_sci_$colon$colon().init___O__sci_List(x, this$2);
-    i = (((-1) + i) | 0)
-  };
-  var x1 = result;
-  matchEnd5: {
-    var x$5_$_$$und1$1;
-    var x$5_$_$$und2$1;
-    var x$5_$_$$und3$1;
-    $m_sci_List$();
-    var o8 = new $c_s_Some().init___O(x1);
-    if ((o8.value$2 !== null)) {
-      var this$4 = $as_sc_LinearSeqOptimized(o8.value$2);
-      var jsx$1 = ($f_sc_LinearSeqOptimized__lengthCompare__I__I(this$4, 4) === 0)
-    } else {
-      var jsx$1 = false
-    };
-    if (jsx$1) {
-      var this$5 = $as_sc_LinearSeqOptimized(o8.value$2);
-      var command = $f_sc_LinearSeqOptimized__apply__I__O(this$5, 1);
-      var this$6 = $as_sc_LinearSeqOptimized(o8.value$2);
-      var headers = $f_sc_LinearSeqOptimized__apply__I__O(this$6, 2);
-      var this$7 = $as_sc_LinearSeqOptimized(o8.value$2);
-      var body = $f_sc_LinearSeqOptimized__apply__I__O(this$7, 3);
-      var x$5_$_$$und1$1 = command;
-      var x$5_$_$$und2$1 = headers;
-      var x$5_$_$$und3$1 = body;
-      break matchEnd5
-    };
-    throw new $c_s_MatchError().init___O(x1)
-  };
-  var command$2 = x$5_$_$$und1$1;
-  var headers$2 = x$5_$_$$und2$1;
-  var body$2 = x$5_$_$$und3$1;
-  var this$10 = $m_Lxyz_hyperreal_stomp$undserver_StompServer$().xyz$hyperreal$stomp$undserver$StompServer$$HeaderRegex$1.findAllMatchIn__jl_CharSequence__sc_Iterator($objectToString(headers$2));
-  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-    return (function(m$2) {
-      var m = $as_s_util_matching_Regex$Match(m$2);
-      var self = $this.unescape__p1__T__T($f_s_util_matching_Regex$MatchData__group__I__T(m, 1));
-      var y = $this.unescape__p1__T__T($f_s_util_matching_Regex$MatchData__group__I__T(m, 2));
-      return new $c_T2().init___O__O(self, y)
-    })
-  })(this));
-  var this$11 = new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$10, f);
-  var b = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
-  while (this$11.hasNext__Z()) {
-    var arg1 = this$11.next__O();
-    b.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1))
-  };
-  var headerMap = $as_sci_Map(b.elems$1);
-  return new $c_T3().init___O__O__O($objectToString(command$2), headerMap, $objectToString(body$2))
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.required__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_Map__sc_Seq__Z = (function(conn, message, headers, requiredHeaders) {
   var requiredSet = requiredHeaders.toSet__sci_Set();
@@ -2654,9 +2682,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.$classData = $d_Lxyz_hyp
 function $c_Lxyz_hyperreal_stomp$undserver_StompServer$() {
   $c_O.call(this);
   this.xyz$hyperreal$stomp$undserver$StompServer$$DEFAULT$undCONTENT$undTYPE$1 = null;
-  this.xyz$hyperreal$stomp$undserver$StompServer$$CONNECTION$undLINGERING$undDELAY$1 = 0;
-  this.xyz$hyperreal$stomp$undserver$StompServer$$stompMessageRegex$1 = null;
-  this.xyz$hyperreal$stomp$undserver$StompServer$$HeaderRegex$1 = null
+  this.xyz$hyperreal$stomp$undserver$StompServer$$CONNECTION$undLINGERING$undDELAY$1 = 0
 }
 $c_Lxyz_hyperreal_stomp$undserver_StompServer$.prototype = new $h_O();
 $c_Lxyz_hyperreal_stomp$undserver_StompServer$.prototype.constructor = $c_Lxyz_hyperreal_stomp$undserver_StompServer$;
@@ -2666,14 +2692,8 @@ function $h_Lxyz_hyperreal_stomp$undserver_StompServer$() {
 }
 $h_Lxyz_hyperreal_stomp$undserver_StompServer$.prototype = $c_Lxyz_hyperreal_stomp$undserver_StompServer$.prototype;
 $c_Lxyz_hyperreal_stomp$undserver_StompServer$.prototype.init___ = (function() {
-  $n_Lxyz_hyperreal_stomp$undserver_StompServer$ = this;
   this.xyz$hyperreal$stomp$undserver$StompServer$$DEFAULT$undCONTENT$undTYPE$1 = "text/plain";
   this.xyz$hyperreal$stomp$undserver$StompServer$$CONNECTION$undLINGERING$undDELAY$1 = 1000;
-  this.xyz$hyperreal$stomp$undserver$StompServer$$stompMessageRegex$1 = (0, $g.RegExp)("([A-Z]+)\\r?\\n?(.*?)\\r?\\n\\r?\\n([^\\00]*)\\00(?:\\r?\\n)*", "s");
-  var this$2 = new $c_sci_StringOps().init___T("([a-zA-Z0-9-\\\\]+):(.+)");
-  var groupNames = $m_sci_Nil$();
-  var $$this = this$2.repr$1;
-  this.xyz$hyperreal$stomp$undserver$StompServer$$HeaderRegex$1 = new $c_s_util_matching_Regex().init___T__sc_Seq($$this, groupNames);
   return this
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer$.prototype.$$lessinit$greater$default$7__Z = (function() {
@@ -2692,6 +2712,107 @@ function $m_Lxyz_hyperreal_stomp$undserver_StompServer$() {
     $n_Lxyz_hyperreal_stomp$undserver_StompServer$ = new $c_Lxyz_hyperreal_stomp$undserver_StompServer$().init___()
   };
   return $n_Lxyz_hyperreal_stomp$undserver_StompServer$
+}
+/** @constructor */
+function $c_Lxyz_hyperreal_stomp$undserver_package$() {
+  $c_O.call(this);
+  this.stompMessageRegex$1 = null;
+  this.headerRegex$1 = null
+}
+$c_Lxyz_hyperreal_stomp$undserver_package$.prototype = new $h_O();
+$c_Lxyz_hyperreal_stomp$undserver_package$.prototype.constructor = $c_Lxyz_hyperreal_stomp$undserver_package$;
+/** @constructor */
+function $h_Lxyz_hyperreal_stomp$undserver_package$() {
+  /*<skip>*/
+}
+$h_Lxyz_hyperreal_stomp$undserver_package$.prototype = $c_Lxyz_hyperreal_stomp$undserver_package$.prototype;
+$c_Lxyz_hyperreal_stomp$undserver_package$.prototype.init___ = (function() {
+  $n_Lxyz_hyperreal_stomp$undserver_package$ = this;
+  this.stompMessageRegex$1 = (0, $g.RegExp)("([A-Z]+)\\r?\\n?(.*?)\\r?\\n\\r?\\n([^\\00]*)\\00(?:\\r?\\n)*", "s");
+  var this$2 = new $c_sci_StringOps().init___T("([a-zA-Z0-9-\\\\]+):(.+)");
+  var groupNames = $m_sci_Nil$();
+  var $$this = this$2.repr$1;
+  this.headerRegex$1 = new $c_s_util_matching_Regex().init___T__sc_Seq($$this, groupNames);
+  return this
+});
+$c_Lxyz_hyperreal_stomp$undserver_package$.prototype.unescape__p1__T__T = (function(s) {
+  var thiz = $as_T(s.split("\\r").join("\r"));
+  var thiz$1 = $as_T(thiz.split("\\n").join("\n"));
+  var thiz$2 = $as_T(thiz$1.split("\\c").join(":"));
+  return $as_T(thiz$2.split("\\\\").join("\\"))
+});
+$c_Lxyz_hyperreal_stomp$undserver_package$.prototype.parseMessage__T__s_Option = (function(message) {
+  var x1 = this.stompMessageRegex$1.exec(message);
+  if ((x1 === null)) {
+    return $m_s_None$()
+  } else {
+    var len = $uI(x1.length);
+    var result = $newArrayObject($d_sjs_js_UndefOr.getArrayOf(), [len]);
+    var len$1 = result.u.length;
+    var i = 0;
+    var j = 0;
+    var x = $uI(x1.length);
+    var x$1 = ((x < len$1) ? x : len$1);
+    var that = result.u.length;
+    var end = ((x$1 < that) ? x$1 : that);
+    while ((i < end)) {
+      var jsx$1 = j;
+      var index = i;
+      result.set(jsx$1, x1[index]);
+      i = ((1 + i) | 0);
+      j = ((1 + j) | 0)
+    };
+    matchEnd5: {
+      var x$1$1_$_$$und1$1;
+      var x$1$1_$_$$und2$1;
+      var x$1$1_$_$$und3$1;
+      var o8 = $m_s_Array$().unapplySeq__O__s_Option(result);
+      if (((!o8.isEmpty__Z()) && ((o8.get__O() !== null) && ($as_sc_SeqLike(o8.get__O()).lengthCompare__I__I(4) === 0)))) {
+        var command = $as_sc_SeqLike(o8.get__O()).apply__I__O(1);
+        var headers = $as_sc_SeqLike(o8.get__O()).apply__I__O(2);
+        var body = $as_sc_SeqLike(o8.get__O()).apply__I__O(3);
+        var x$1$1_$_$$und1$1 = command;
+        var x$1$1_$_$$und2$1 = headers;
+        var x$1$1_$_$$und3$1 = body;
+        break matchEnd5
+      };
+      throw new $c_s_MatchError().init___O(result)
+    };
+    var command$2 = x$1$1_$_$$und1$1;
+    var headers$2 = x$1$1_$_$$und2$1;
+    var body$2 = x$1$1_$_$$und3$1;
+    var this$13 = this.headerRegex$1.findAllMatchIn__jl_CharSequence__sc_Iterator($objectToString(headers$2));
+    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(m$2) {
+        var m = $as_s_util_matching_Regex$Match(m$2);
+        var self = $m_Lxyz_hyperreal_stomp$undserver_package$().unescape__p1__T__T($f_s_util_matching_Regex$MatchData__group__I__T(m, 1));
+        var y = $m_Lxyz_hyperreal_stomp$undserver_package$().unescape__p1__T__T($f_s_util_matching_Regex$MatchData__group__I__T(m, 2));
+        return new $c_T2().init___O__O(self, y)
+      })
+    })(this));
+    var this$14 = new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$13, f);
+    var b = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
+    while (this$14.hasNext__Z()) {
+      var arg1 = this$14.next__O();
+      b.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1))
+    };
+    var headerMap = $as_sci_Map(b.elems$1);
+    return new $c_s_Some().init___O(new $c_T3().init___O__O__O($objectToString(command$2), headerMap, $objectToString(body$2)))
+  }
+});
+var $d_Lxyz_hyperreal_stomp$undserver_package$ = new $TypeData().initClass({
+  Lxyz_hyperreal_stomp$undserver_package$: 0
+}, false, "xyz.hyperreal.stomp_server.package$", {
+  Lxyz_hyperreal_stomp$undserver_package$: 1,
+  O: 1
+});
+$c_Lxyz_hyperreal_stomp$undserver_package$.prototype.$classData = $d_Lxyz_hyperreal_stomp$undserver_package$;
+var $n_Lxyz_hyperreal_stomp$undserver_package$ = (void 0);
+function $m_Lxyz_hyperreal_stomp$undserver_package$() {
+  if ((!$n_Lxyz_hyperreal_stomp$undserver_package$)) {
+    $n_Lxyz_hyperreal_stomp$undserver_package$ = new $c_Lxyz_hyperreal_stomp$undserver_package$().init___()
+  };
+  return $n_Lxyz_hyperreal_stomp$undserver_package$
 }
 /** @constructor */
 function $c_jl_Class() {
@@ -4592,6 +4713,37 @@ function $m_s_reflect_package$() {
     $n_s_reflect_package$ = new $c_s_reflect_package$().init___()
   };
   return $n_s_reflect_package$
+}
+/** @constructor */
+function $c_s_sys_package$() {
+  $c_O.call(this)
+}
+$c_s_sys_package$.prototype = new $h_O();
+$c_s_sys_package$.prototype.constructor = $c_s_sys_package$;
+/** @constructor */
+function $h_s_sys_package$() {
+  /*<skip>*/
+}
+$h_s_sys_package$.prototype = $c_s_sys_package$.prototype;
+$c_s_sys_package$.prototype.init___ = (function() {
+  return this
+});
+$c_s_sys_package$.prototype.error__T__sr_Nothing$ = (function(message) {
+  throw $m_sjsr_package$().unwrapJavaScriptException__jl_Throwable__O(new $c_jl_RuntimeException().init___T(message))
+});
+var $d_s_sys_package$ = new $TypeData().initClass({
+  s_sys_package$: 0
+}, false, "scala.sys.package$", {
+  s_sys_package$: 1,
+  O: 1
+});
+$c_s_sys_package$.prototype.$classData = $d_s_sys_package$;
+var $n_s_sys_package$ = (void 0);
+function $m_s_sys_package$() {
+  if ((!$n_s_sys_package$)) {
+    $n_s_sys_package$ = new $c_s_sys_package$().init___()
+  };
+  return $n_s_sys_package$
 }
 /** @constructor */
 function $c_s_util_DynamicVariable() {
@@ -9734,6 +9886,20 @@ function $h_jl_RuntimeException() {
   /*<skip>*/
 }
 $h_jl_RuntimeException.prototype = $c_jl_RuntimeException.prototype;
+$c_jl_RuntimeException.prototype.init___T = (function(s) {
+  $c_jl_Throwable.prototype.init___T__jl_Throwable__Z__Z.call(this, s, null, true, true);
+  return this
+});
+var $d_jl_RuntimeException = new $TypeData().initClass({
+  jl_RuntimeException: 0
+}, false, "java.lang.RuntimeException", {
+  jl_RuntimeException: 1,
+  jl_Exception: 1,
+  jl_Throwable: 1,
+  O: 1,
+  Ljava_io_Serializable: 1
+});
+$c_jl_RuntimeException.prototype.$classData = $d_jl_RuntimeException;
 var $d_jl_Short = new $TypeData().initClass({
   jl_Short: 0
 }, false, "java.lang.Short", {
@@ -22814,11 +22980,11 @@ function $h_sci_HashMap$EmptyHashMap$() {
   /*<skip>*/
 }
 $h_sci_HashMap$EmptyHashMap$.prototype = $c_sci_HashMap$EmptyHashMap$.prototype;
-$c_sci_HashMap$EmptyHashMap$.prototype.head__O = (function() {
-  return this.head__T2()
-});
 $c_sci_HashMap$EmptyHashMap$.prototype.init___ = (function() {
   return this
+});
+$c_sci_HashMap$EmptyHashMap$.prototype.head__O = (function() {
+  return this.head__T2()
 });
 $c_sci_HashMap$EmptyHashMap$.prototype.head__T2 = (function() {
   throw new $c_ju_NoSuchElementException().init___T("Empty Map")
@@ -23052,13 +23218,13 @@ $c_sci_HashMap$HashMapCollision1.prototype.removed0__O__I__I__sci_HashMap = (fun
     return this
   }
 });
-$c_sci_HashMap$HashMapCollision1.prototype.size__I = (function() {
-  return this.kvs$6.size__I()
-});
 $c_sci_HashMap$HashMapCollision1.prototype.iterator__sc_Iterator = (function() {
   var this$1 = this.kvs$6;
   var this$2 = this$1.reverseList$1__p5__sci_List();
   return new $c_sc_LinearSeqLike$$anon$1().init___sc_LinearSeqLike(this$2)
+});
+$c_sci_HashMap$HashMapCollision1.prototype.size__I = (function() {
+  return this.kvs$6.size__I()
 });
 $c_sci_HashMap$HashMapCollision1.prototype.init___I__sci_ListMap = (function(hash, kvs) {
   this.hash$6 = hash;
@@ -23202,11 +23368,11 @@ $c_sci_HashMap$HashTrieMap.prototype.removed0__O__I__I__sci_HashMap = (function(
     return this
   }
 });
-$c_sci_HashMap$HashTrieMap.prototype.size__I = (function() {
-  return this.size0$6
-});
 $c_sci_HashMap$HashTrieMap.prototype.iterator__sc_Iterator = (function() {
   return new $c_sci_HashMap$HashTrieMap$$anon$3().init___sci_HashMap$HashTrieMap(this)
+});
+$c_sci_HashMap$HashTrieMap.prototype.size__I = (function() {
+  return this.size0$6
 });
 $c_sci_HashMap$HashTrieMap.prototype.init___I__Asci_HashMap__I = (function(bitmap, elems, size0) {
   this.bitmap$6 = bitmap;

@@ -10,7 +10,7 @@ object Main extends App {
 //  val serverHostname = "0.0.0.0"
 //  val serverPort = 15674
 //  val serverPath = "/stomp"
-//  val server = new StompServer( "ShuttleControl/1.0", serverHostname, serverPort, serverPath, authorize, authorize, false )
+//  val server = new StompServer( "ShuttleControl/1.0", serverHostname, serverPort, serverPath, authorize, authorize, true )
 //  val client = new StompClient( serverHostname, serverPort, serverPath, _.connect(Map()), onMessage )
 //
 //  def onMessage( client: StompClient, command: String, headers: Map[String, String], body: String ): Unit =
@@ -22,7 +22,7 @@ object Main extends App {
 //        client.disconnect( "disconnect-receipt" )
 //      case "RECEIPT" =>
 //        headers("receipt-id") match {
-//          case "subscribe-receipt" => client.send( "data", "this is the message" )
+//          case "subscribe-receipt" => server.send( "data", null )
 //          case "disconnect-receipt" => client.close
 //        }
 //    }

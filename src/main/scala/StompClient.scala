@@ -35,13 +35,16 @@ class StompClient( hostname: String, port: Int, path: String, onOpen: StompClien
     frame( "SUBSCRIBE",
       Map("destination" -> queue, "id" -> queue, "accept-version" -> "1.2") ++ (if (receipt eq null) Nil else List("receipt" -> receipt)) )
 
-  def send( queue: String, body: String, contentType: String = "text/plain" ) =
+  def send( queue: String, body: String, contentType: String = "text/plain" ) = {
+    val s = if (body eq null) "null" else body
+
     frame( "SEND", Map(
       "subscription" -> queue,
       "destination" -> queue,
       "content-type" -> contentType,
-      "content-length" -> body.length.toString
-    ), body )
+      "content-length" -> s.length.toString
+    ), s )
+  }
 
   def frame( command: String, headers: Map[String, String], body: String = "" ) = {
     val buf = new StringBuilder( s"$command\n" )

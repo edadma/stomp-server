@@ -67,7 +67,7 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
     p.future
   }
 
-  "send" in {
+  "receipt" in {
     val p = Promise[Assertion]
 
     def onMessage( client: StompClient, command: String, headers: Map[String, String], body: String ): Unit =
@@ -80,6 +80,50 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
         case "RECEIPT" =>
           headers("receipt-id") match {
             case "subscribe-receipt" => client.send( "data", "this is the message" )
+            case "disconnect-receipt" => client.close
+          }
+      }
+
+    val client = new StompClient( serverHostname, serverPort, serverPath, _.connect(Map()), onMessage )
+
+    p.future
+  }
+
+  "send null from server" in {
+    val p = Promise[Assertion]
+
+    def onMessage( client: StompClient, command: String, headers: Map[String, String], body: String ): Unit =
+      command match {
+        case "CONNECTED" =>
+          client.subscribe( "data", "subscribe-receipt" )
+        case "MESSAGE" =>
+          p success (body shouldBe "null")
+          client.disconnect( "disconnect-receipt" )
+        case "RECEIPT" =>
+          headers("receipt-id") match {
+            case "subscribe-receipt" => server.send( "data", null )
+            case "disconnect-receipt" => client.close
+          }
+      }
+
+    val client = new StompClient( serverHostname, serverPort, serverPath, _.connect(Map()), onMessage )
+
+    p.future
+  }
+
+  "send null from client" in {
+    val p = Promise[Assertion]
+
+    def onMessage( client: StompClient, command: String, headers: Map[String, String], body: String ): Unit =
+      command match {
+        case "CONNECTED" =>
+          client.subscribe( "data", "subscribe-receipt" )
+        case "MESSAGE" =>
+          p success (body shouldBe "null")
+          client.disconnect( "disconnect-receipt" )
+        case "RECEIPT" =>
+          headers("receipt-id") match {
+            case "subscribe-receipt" => client.send( "data", null )
             case "disconnect-receipt" => client.close
           }
       }
