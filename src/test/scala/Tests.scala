@@ -23,7 +23,7 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
   import Tests._
 
   implicit override def executionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", _ => true, _ => true, true )
+  val server = new StompServer( "ShuttleControl/1.0", "0.0.0.0", 15674, "/stomp", _ => true, _ => true, false )
 
 	"connect" in {
     val sock = new sockjsDashClientMod.^(s"http://$serverHostname:$serverPort$serverPath")
@@ -67,24 +67,26 @@ class Tests extends AsyncFreeSpec with ScalaCheckPropertyChecks with Matchers {
     p.future
   }
 
-//  "send" in {
-//    val client = new StompClient( serverHostname, serverPort, serverPath, _.connect(Map()), onMessage )
-//    val p = Promise[Assertion]
-//
-//    def onMessage( command: String, headers: Map[String, String], body: String ) = {
-//      println( command, headers, body )
-//
-//      command match {
-//        case "CONNECTED" =>
-//          client.send( "SUBSCRIBE", Map("id" -> "0", "destination" -> "data", "receipt" -> "my-receipt") )
-//        case "MESSAGE" =>
-//          p success assert(true)
-//        case "RECEIPT" =>
-//
-//      }
-//    }
-//
-//    p.future
-//  }
+  "send" in {
+    val p = Promise[Assertion]
+
+    def onMessage( client: StompClient, command: String, headers: Map[String, String], body: String ): Unit =
+      command match {
+        case "CONNECTED" =>
+          client.subscribe( "data", "subscribe-receipt" )
+        case "MESSAGE" =>
+          p success (body shouldBe "this is the message")
+          client.disconnect( "disconnect-receipt" )
+        case "RECEIPT" =>
+          headers("receipt-id") match {
+            case "subscribe-receipt" => client.send( "data", "this is the message" )
+            case "disconnect-receipt" => client.close
+          }
+      }
+
+    val client = new StompClient( serverHostname, serverPort, serverPath, _.connect(Map()), onMessage )
+
+    p.future
+  }
 
 }
