@@ -2395,28 +2395,36 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (func
             var subscriptionId = x$5.subscriptionId$1;
             var s = ((body$1 === null) ? "null" : body$1);
             this$2.dbg__p1__T__V((((((("messaging " + client) + ", queue ") + queue$1) + ": '") + s) + "'"));
-            var jsx$6 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this$2.connections$1.apply__O__O(client)).conn$1;
-            $m_sci_List$();
-            var jsx$5 = new $c_T2().init___O__O("subscription", subscriptionId);
-            var t = $i_uuid;
-            var jsx$3 = t.v1();
-            var y = $as_T(jsx$3);
-            var jsx$4 = new $c_T2().init___O__O("message-id", y);
-            var jsx$2 = new $c_T2().init___O__O("destination", queue$1);
-            var jsx$1 = new $c_T2().init___O__O("content-type", contentType$1);
-            var this$13 = $uI(s.length);
-            var y$1 = ("" + this$13);
-            var array = [jsx$5, jsx$4, jsx$2, jsx$1, new $c_T2().init___O__O("content-length", y$1)];
-            var i = (((-1) + $uI(array.length)) | 0);
-            var result = $m_sci_Nil$();
-            while ((i >= 0)) {
-              var this$19 = result;
-              var index = i;
-              var x$1 = array[index];
-              result = new $c_sci_$colon$colon().init___O__sci_List(x$1, this$19);
-              i = (((-1) + i) | 0)
-            };
-            return this$2.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(jsx$6, "MESSAGE", result, s)
+            if (this$2.connections$1.contains__O__Z(client)) {
+              var jsx$6 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this$2.connections$1.apply__O__O(client)).conn$1;
+              $m_sci_List$();
+              var jsx$5 = new $c_T2().init___O__O("subscription", subscriptionId);
+              var t = $i_uuid;
+              var jsx$3 = t.v1();
+              var y = $as_T(jsx$3);
+              var jsx$4 = new $c_T2().init___O__O("message-id", y);
+              var jsx$2 = new $c_T2().init___O__O("destination", queue$1);
+              var jsx$1 = new $c_T2().init___O__O("content-type", contentType$1);
+              var this$13 = $uI(s.length);
+              var y$1 = ("" + this$13);
+              var array = [jsx$5, jsx$4, jsx$2, jsx$1, new $c_T2().init___O__O("content-length", y$1)];
+              var i = (((-1) + $uI(array.length)) | 0);
+              var result = $m_sci_Nil$();
+              while ((i >= 0)) {
+                var this$19 = result;
+                var index = i;
+                var x$1 = array[index];
+                result = new $c_sci_$colon$colon().init___O__sci_List(x$1, this$19);
+                i = (((-1) + i) | 0)
+              };
+              return this$2.sendMessage__p1__Ltypings_sockjs_sockjsMod_Connection__T__sci_List__T__O(jsx$6, "MESSAGE", result, s)
+            } else {
+              var x$2 = (((((("StompServer: sockjs id " + client) + " not found in connections, could not send '") + s) + "' in queue '") + queue$1) + "'");
+              var this$21 = $m_s_Console$();
+              var this$22 = $as_Ljava_io_PrintStream(this$21.outVar$2.v$1);
+              this$22.java$lang$JSConsoleBasedPrintStream$$printString__T__V((x$2 + "\n"));
+              return (void 0)
+            }
           } else {
             throw new $c_s_MatchError().init___O(x$5)
           }

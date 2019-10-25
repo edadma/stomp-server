@@ -330,14 +330,19 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
           val s = if (body eq null) "null" else body
 
           dbg( s"messaging $client, queue $queue: '$s'")
-          sendMessage( connections(client).conn, "MESSAGE",
-            List(
-              "subscription" -> subscriptionId,
-              "message-id" -> uuidMod.^.v1,
-              "destination" -> queue,
-              "content-type" -> contentType,
-              "content-length" -> s.length.toString),
-            s )
+
+          if (connections contains client) {
+            sendMessage( connections(client).conn, "MESSAGE",
+              List(
+                "subscription" -> subscriptionId,
+                "message-id" -> uuidMod.^.v1,
+                "destination" -> queue,
+                "content-type" -> contentType,
+                "content-length" -> s.length.toString),
+              s )
+          } else {
+            println( s"StompServer: sockjs id $client not found in connections, could not send '$s' in queue '$queue'" )
+          }
         }
     }
   }
