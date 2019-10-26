@@ -73,8 +73,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
                     if (timer ne null)
                       clearInterval( timer )
 
-                    conn.close
-                    connections -= id
+                    close( conn )
                   }
               }
             }
@@ -139,19 +138,11 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
             val subscriber = Subscriber( conn.id, headers("id") )
 
-            subscriptions get subscriber match {
-              case Some(Subscription(queue, _)) =>
-                subscriptions -= subscriber
-
-                val set = queueMap(queue)
-
-                set -= subscriber
-
-                if (set isEmpty)
-                  queueMap -= queue
-              case None =>
-                dbg( s"*** subscription not found: $subscriber" )
-                error( conn, headers, "subscription not found" )
+            if (subscriptions contains subscriber)
+              unsubscribe( subscriber )
+            else {
+              dbg( s"*** subscription not found: $subscriber" )
+              error( conn, headers, "subscription not found" )
             }
 
             receipt( conn, headers )
@@ -231,6 +222,19 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   println( s"Listening on $hostname:$port")
   server.listen( port, hostname )
 
+  private def unsubscribe( subscriber: Subscriber ): Unit = {
+    val Subscription( queue, _ ) = subscriptions( subscriber )
+
+    subscriptions -= subscriber
+
+    val set = queueMap(queue)
+
+    set -= subscriber
+
+    if (set isEmpty)
+      queueMap -= queue
+  }
+
   private def addToTransaction( transaction: String, headers: Map[String, String], body: String ) = {
     transactions(transaction) += Message( headers("destination"), body, headers.getOrElse("content-type", DEFAULT_CONTENT_TYPE) )
   }
@@ -299,8 +303,18 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
         case Some( c ) => clearInterval( c.timer )
       }
 
-      conn.close
+      close( conn )
     }, CONNECTION_LINGERING_DELAY )
+  }
+
+  private def close( conn: Connection ): Unit = {
+    val id = conn.id
+
+    conn.close
+    connections -= id
+
+    for ((sub@Subscriber( client, _ ), _) <- subscriptions if client == id)
+      unsubscribe( sub )
   }
 
   private def error( conn: Connection, headers: Map[String, String], message: String, body: String = "" ): Unit = {

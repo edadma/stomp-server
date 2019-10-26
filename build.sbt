@@ -1,6 +1,6 @@
 name := "stomp-server"
 
-version := "0.1.10"
+version := "0.1.11"
 
 scalaVersion := "2.12.10"
 
@@ -28,8 +28,8 @@ npmDependencies in Compile ++=
     "uuid" -> "3.3.3",
     "sockjs" -> "^0.3.19",
     // testing
-   "sockjs-client" -> "1.4.0",
-//   "stompjs" -> "2.3.3"
+    "sockjs-client" -> "1.4.0",
+    "stompjs" -> "2.3.3"
 )
 
 libraryDependencies ++= Seq(
@@ -37,7 +37,7 @@ libraryDependencies ++= Seq(
   ScalablyTyped.S.sockjs,
   // testing
   ScalablyTyped.S.`sockjs-client`,
-//  ScalablyTyped.S.stompjs
+  ScalablyTyped.S.stompjs
 )
 
 libraryDependencies ++= Seq(
