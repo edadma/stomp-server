@@ -2645,6 +2645,7 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.heartBeat$1__p1__sjs_js_
       var hi$3 = (value >> 31);
       if (((hi$2 === hi$3) ? (((-2147483648) ^ lo$2) > ((-2147483648) ^ value)) : (hi$2 > hi$3))) {
         this.dbg__p1__T__V(((((("dead connection: " + $as_T(conn$1.remoteAddress)) + ":") + $uD(conn$1.remotePort)) + "/") + conn$1));
+        this.close__p1__Ltypings_sockjs_sockjsMod_Connection__V(conn$1);
         break matchEnd12
       } else {
         break matchEnd12
