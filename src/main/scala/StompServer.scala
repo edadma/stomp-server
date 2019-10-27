@@ -62,18 +62,12 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
               connections(conn.id) match {
                 case StompConnection(_, _, 0, _, _) =>
-                case StompConnection(_, _, receiveBeats, lastReceived, timer) =>
+                case StompConnection(_, _, receiveBeats, lastReceived, _) =>
                   val time = System.currentTimeMillis
 
                   if (time - lastReceived > receiveBeats + 100) {
-                    val id = conn.id
-
                     dbg( s"dead connection: ${conn.remoteAddress}:${conn.remotePort}/$conn" )
-
-                    if (timer ne null)
-                      clearInterval( timer )
-
-                    close( conn )
+//                    close( conn ) // as an experiment, try not closing the connection
                   }
               }
             }
@@ -298,17 +292,17 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
   private def disconnect( conn: Connection ): Unit = {
     setTimeout( _ => {
-      connections get conn.id match {
-        case None | Some( StompConnection(_, _, _, _, null) ) =>
-        case Some( c ) => clearInterval( c.timer )
-      }
-
       close( conn )
     }, CONNECTION_LINGERING_DELAY )
   }
 
   private def close( conn: Connection ): Unit = {
     val id = conn.id
+
+    connections get id match {
+      case None | Some( StompConnection(_, _, _, _, null) ) =>
+      case Some( c ) => clearInterval( c.timer )
+    }
 
     conn.close
     connections -= id
