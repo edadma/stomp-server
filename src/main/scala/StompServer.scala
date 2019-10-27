@@ -67,7 +67,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
                   if (time - lastReceived > receiveBeats + 100) {
                     dbg( s"dead connection: ${conn.remoteAddress}:${conn.remotePort}/$conn" )
-//                    close( conn ) // as an experiment, try not closing the connection
+                    close( conn )
                   }
               }
             }
