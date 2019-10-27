@@ -2266,6 +2266,36 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.init___T__T__I__T__sjs_j
 });
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.close__p1__Ltypings_sockjs_sockjsMod_Connection__V = (function(conn) {
   var id = $as_T(conn.id);
+  var x1 = this.connections$1.get__O__s_Option(id);
+  matchEnd16: {
+    var jsx$1;
+    var x = $m_s_None$();
+    if ((x === x1)) {
+      var jsx$1 = true;
+      break matchEnd16
+    };
+    if ((x1 instanceof $c_s_Some)) {
+      var x2 = $as_s_Some(x1);
+      var p3 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
+      if ((p3 !== null)) {
+        var p8 = p3.timer$1;
+        if ((p8 === null)) {
+          var jsx$1 = true;
+          break matchEnd16
+        }
+      }
+    };
+    var jsx$1 = false
+  };
+  if ((!jsx$1)) {
+    if ((x1 instanceof $c_s_Some)) {
+      var x9 = $as_s_Some(x1);
+      var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x9.value$2);
+      (0, $g.clearInterval)(c.timer$1)
+    } else {
+      throw new $c_s_MatchError().init___O(x1)
+    }
+  };
   conn.close();
   this.connections$1.$$minus$eq__O__scm_HashMap(id);
   var this$1 = this.subscriptions$1;
@@ -2441,43 +2471,10 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.send__T__T__T__V = (func
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.$$js$exported$meth$queues__O = (function() {
   return this.queues__sjs_js_Array()
 });
-$c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$disconnect$1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__V = (function(x$4, conn$2) {
-  var x1 = this.connections$1.get__O__s_Option($as_T(conn$2.id));
-  matchEnd16: {
-    var jsx$1;
-    var x = $m_s_None$();
-    if ((x === x1)) {
-      var jsx$1 = true;
-      break matchEnd16
-    };
-    if ((x1 instanceof $c_s_Some)) {
-      var x2 = $as_s_Some(x1);
-      var p3 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x2.value$2);
-      if ((p3 !== null)) {
-        var p8 = p3.timer$1;
-        if ((p8 === null)) {
-          var jsx$1 = true;
-          break matchEnd16
-        }
-      }
-    };
-    var jsx$1 = false
-  };
-  if ((!jsx$1)) {
-    if ((x1 instanceof $c_s_Some)) {
-      var x9 = $as_s_Some(x1);
-      var c = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(x9.value$2);
-      (0, $g.clearInterval)(c.timer$1)
-    } else {
-      throw new $c_s_MatchError().init___O(x1)
-    }
-  };
-  this.close__p1__Ltypings_sockjs_sockjsMod_Connection__V(conn$2)
-});
 $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.disconnect__p1__Ltypings_sockjs_sockjsMod_Connection__V = (function(conn) {
   (0, $g.setTimeout)((function(arg$outer, conn$2) {
     return (function(arg1$2) {
-      arg$outer.xyz$hyperreal$stomp$undserver$StompServer$$$anonfun$disconnect$1__sjs_js_Any__Ltypings_sockjs_sockjsMod_Connection__V(arg1$2, conn$2)
+      arg$outer.close__p1__Ltypings_sockjs_sockjsMod_Connection__V(conn$2)
     })
   })(this, conn), $m_Lxyz_hyperreal_stomp$undserver_StompServer$().xyz$hyperreal$stomp$undserver$StompServer$$CONNECTION$undLINGERING$undDELAY$1)
 });
@@ -2627,11 +2624,11 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.heartBeat$1__p1__sjs_js_
   conn$1.write("\n");
   this.dbg__p1__T__V(((((("heart beat sent to " + $as_T(conn$1.remoteAddress)) + ":") + $uD(conn$1.remotePort)) + "/") + conn$1));
   var x1 = $as_Lxyz_hyperreal_stomp$undserver_StompServer$StompConnection(this.connections$1.apply__O__O($as_T(conn$1.id)));
-  matchEnd11: {
+  matchEnd12: {
     if ((x1 !== null)) {
       var p4 = x1.receiveBeats$1;
       if ((p4 === 0)) {
-        break matchEnd11
+        break matchEnd12
       }
     };
     if ((x1 !== null)) {
@@ -2639,7 +2636,6 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.heartBeat$1__p1__sjs_js_
       var t = x1.lastReceived$1;
       var lo = t.lo$2;
       var hi = t.hi$2;
-      var timer = x1.timer$1;
       var t$1 = $m_jl_System$().currentTimeMillis__J();
       var lo$1 = t$1.lo$2;
       var hi$1 = t$1.hi$2;
@@ -2648,15 +2644,10 @@ $c_Lxyz_hyperreal_stomp$undserver_StompServer.prototype.heartBeat$1__p1__sjs_js_
       var value = ((100 + receiveBeats) | 0);
       var hi$3 = (value >> 31);
       if (((hi$2 === hi$3) ? (((-2147483648) ^ lo$2) > ((-2147483648) ^ value)) : (hi$2 > hi$3))) {
-        $as_T(conn$1.id);
         this.dbg__p1__T__V(((((("dead connection: " + $as_T(conn$1.remoteAddress)) + ":") + $uD(conn$1.remotePort)) + "/") + conn$1));
-        if ((timer !== null)) {
-          (0, $g.clearInterval)(timer)
-        };
-        this.close__p1__Ltypings_sockjs_sockjsMod_Connection__V(conn$1);
-        break matchEnd11
+        break matchEnd12
       } else {
-        break matchEnd11
+        break matchEnd12
       }
     };
     throw new $c_s_MatchError().init___O(x1)
