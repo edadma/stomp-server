@@ -33,7 +33,11 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   case class StompConnection( conn: Connection, sendBeats: Int, receiveBeats: Int, var lastReceived: Long, timer: Timeout )
   case class Message( queue: String, body: String, contentType: String )
 
-  private val sock = sockjs.sockjsMod.createServer()
+  def logger( severity: String, message: String ) =
+    if (severity == "error")
+      println( message )
+
+  private val sock = sockjs.sockjsMod.createServer( ServerOptions(log = logger) )
   private val subscriptions = new mutable.HashMap[Subscriber, Subscription]
   private val connections = new mutable.HashMap[String, StompConnection]
   private val queueMap = new mutable.HashMap[String, mutable.HashSet[Subscriber]]
@@ -211,6 +215,9 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
               case Some( ("NACK", headers, _) ) =>
                 dbg( s"nack: $headers" )
                 required( conn, message, headers, "id" )
+              case Some( (command, headers, body) ) =>
+                dbg( s"unrecognized command: $command; $headers; $body" )
+                error( conn, headers, s"unrecognized command: $command" )
             }
           }
         }
@@ -226,8 +233,8 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
   } )
 
   sock.installHandlers( server, js.Dynamic.literal(prefix = path).asInstanceOf[ServerOptions] )
-  println( s"Listening on $hostname:$port")
   server.listen( port, hostname )
+  dbg( s"Listening on $hostname:$port")
 
   private def unsubscribe( subscriber: Subscriber ): Unit = {
     val Subscription( queue, _ ) = subscriptions( subscriber )

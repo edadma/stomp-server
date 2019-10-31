@@ -2,7 +2,6 @@
 //
 //import typings.sockjsDashClient.sockjsDashClientMod
 //import typings.std.{Event, MessageEvent, WebSocket}
-//import typings.uuid.uuidMod
 //
 //import scala.scalajs.js
 //
