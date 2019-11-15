@@ -327,7 +327,7 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
     conn.close
     connections -= id
 
-    for ((sub@Subscriber( client, _ ), _) <- subscriptions if client == id)
+    for ((sub@Subscriber( client, _ ), _) <- subscriptions.toList if client == id)
       unsubscribe( sub )
   }
 
@@ -359,18 +359,18 @@ class StompServer( name: String, hostname: String, port: Int, path: String, conn
 
           dbg( s"messaging $client, queue $queue: '$s'")
 
-          if (connections contains client) {
-            sendMessage( connections(client).conn, "MESSAGE",
-              List(
-                "subscription" -> subscriptionId,
-                "message-id" -> uuidMod.^.v1,
-                "destination" -> queue,
-                "content-type" -> contentType,
-                "content-length" -> s.length.toString),
-              s )
-          } else {
-            println( s"StompServer: sockjs id $client not found in connections, could not send '$s' in queue '$queue'" )
-          }
+          connections get client match {
+            case Some( c ) =>
+              sendMessage( c.conn, "MESSAGE",
+                List(
+                  "subscription" -> subscriptionId,
+                  "message-id" -> uuidMod.^.v1,
+                  "destination" -> queue,
+                  "content-type" -> contentType,
+                  "content-length" -> s.length.toString), s )
+              case None =>
+                println( s"StompServer: sockjs id $client not found in connections, could not send '$s' in queue '$queue'" )
+            }
         }
     }
   }
